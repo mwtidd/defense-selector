@@ -1,0 +1,633 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../font-roboto-local/roboto.html">
+
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+
+<link rel="import" href="../platinum-sw/platinum-sw-register.html">
+<link rel="import" href="../platinum-sw/platinum-sw-cache.html">
+
+<!--
+An element to start from.
+
+Example:
+
+    <defense-selector></defense-selector>
+
+@demo
+-->
+<dom-module id="defense-canvas">
+
+  <style is="custom-style">
+    :host {
+      display: block;
+      font-family: 'Roboto';
+      background-color: rgb(54,54,54);
+      overflow: hidden;
+      position: relative;
+    }
+
+    :host #viewport{
+      float:left;
+      width: 100%;
+      height: 100%;
+    }
+
+    :host #view{
+      position: relative;
+    }
+
+    :host canvas{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    :host #targets{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    :host #targets > div{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 8%;
+      height: 7%;
+      cursor: pointer;
+    }
+
+    :host #targets > div:after {
+      position: absolute;
+      bottom: 0;
+      left: 10%;
+      width: 80%;
+      content: "";
+      height: 3px;
+      background: rgba(255,255,255,.3);
+      transition: all 250ms linear;
+
+      display: block;
+    }
+
+    :host #targets > div.selected:after{
+      left: 0;
+      width: 100%;
+      background: rgba(255,255,255,1);
+    }
+
+    :host #targets .r{
+      top: 35%;
+    }
+
+    :host #targets #r2 {
+       left: 34.5%;
+     }
+
+    :host #targets #r4 {
+      left: 50%;
+    }
+
+    :host #targets #r5 {
+      left: 58%;
+    }
+
+    :host #targets .b{
+      top: 59%;
+    }
+
+    :host #targets #b5 {
+      left: 33%;
+    }
+
+    :host #targets #b4 {
+      left: 42%;
+    }
+
+    :host #targets #b2 {
+      left: 60%;
+    }
+
+  </style>
+
+  <template>
+    <content></content>
+    <div id="viewport">
+      <div id="view">
+        <canvas id="canvas"></canvas>
+        <div id="targets">
+          <template is="dom-repeat" items="{{models}}" as="model">
+            <div id$="[[model.id]]" class$="[[model.color]] [[getSelectedCss(model.selected)]]" on-tap="onSelectModel"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+
+    <paper-dialog opened="[[!loaded]]">
+      <h2>Installing the Defense Selector</h2>
+      <div>[[loadingState]]</div>
+      <paper-progress indeterminate="[[indeterminateLoadingState]]"></paper-progress>
+    </paper-dialog>
+
+    <platinum-sw-register id="imageService" state="{{imageServiceState}}">
+
+      <platinum-sw-cache id="imageCache" precache="[[precacheUrls]]"></platinum-sw-cache>
+
+    </platinum-sw-register>
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'defense-canvas',
+
+    behaviors: [
+
+    ],
+
+    listeners: {
+      'service-worker-installed': 'onInstalled',
+      'service-worker-updated': 'onUpdated',
+      'service-worker-error': 'onError',
+      'view.track' : 'onDrag',
+    },
+
+    properties: {
+
+      indeterminateLoadingState: {
+        type: Boolean,
+        value: true
+      },
+
+      loadingState: {
+        type: String,
+        value: "initializing..."
+      },
+
+      loaded: {
+        type: Boolean,
+        value: false,
+        observer: 'onLoadedChange'
+      },
+
+      audienceRedCategory: {
+        type: String,
+        value: "a"
+      },
+
+      audienceBlueCategory: {
+        type: String,
+        value: "b"
+      },
+
+
+      imageServiceState: {
+        type: Object,
+        value: function(){
+          return ;
+        },
+        observer: 'onImageServiceStateChange'
+      },
+
+        backgroundImage: {
+          type: String,
+          value: null
+        },
+
+        firstLayerImages: {
+          type: Object,
+          value: function(){
+            return null;
+          }
+        },
+
+        secondLayerImages: {
+          type: Object,
+          value: function(){
+            return null;
+          }
+        },
+
+        scalar: {
+          type: Number,
+          value: 2
+        },
+
+        precacheUrls: {
+          type: Array,
+          value: function(){
+            return [];
+          },
+        },
+
+      imageUrl: {
+        type: "String",
+        value: "localhost"
+      },
+
+      models: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+
+
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+
+    // Element Behavior
+
+    initPrecache: function(){
+      this.set("loadingState", "indexing images...");
+      this.push("precacheUrls", this.imageUrl+"/" + this.backgroundImage);
+
+
+      this.firstLayerImages.forEach(function(image){
+        var url = "/layers/base/A0_" + image.c + "_" + image.p + "_base.png";
+        this.push("precacheUrls", this.imageUrl+"/" + url);
+      }, this);
+
+      this.secondLayerImages.forEach(function(image){
+        var url = "/layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
+        this.push("precacheUrls", this.imageUrl+"/" + url);
+      }, this);
+
+      this.set("loadingState", "downloading images...");
+      this.$.imageService.register();
+    },
+
+    getSelectedCss: function(isSelected){
+      if(isSelected){
+        return "selected";
+      }
+
+      return "";
+    },
+
+    onInstalled: function(event){
+      console.log("sw installed");
+      this.set("loaded", true);
+    },
+
+    onUpdated: function(event){
+      console.log("sw updated");
+      this.set("loaded", true);
+    },
+
+    onError: function(event){
+      console.error("A service worker error occurred");
+    },
+
+    onImageServiceStateChange: function(state){
+      if(state == "installed" || state == "updated"){
+        console.log("sw is good");
+        this.set("loaded", true);
+      }else if(state == "unsupported"){
+        alert("We're sorry, but your browser doesn't support service workers. Please try the latest version of Chrome.");
+      }else{
+        alert("A service worker error occurred");
+      }
+    },
+
+    onLoadedChange: function(loaded){
+      if(loaded === true){
+        this.paintScene();
+      }
+    },
+
+    onSelectModel: function(event){
+      var model = event.model.model;
+      //model.set("item.selected", true);
+
+      for(var i = 0; i < this.models.length; i++){
+        var _model = this.models[i];
+        if(_model.id == model.id){
+          this.set("models." + i + ".selected", true);
+        }else{
+          this.set("models." + i + ".selected", false);
+        }
+      }
+
+      this.fire("model-selected", model);
+    },
+
+    onDrag: function(event){
+      if(event.detail.state == "start"){
+        this.startDrag(event);
+      }else if(event.detail.state == "end"){
+        this.endDrag();
+      }else if(event.detail.state == "track"){
+        this.debounce("drag", this.drag(event),250);
+      }
+    },
+
+    startDrag: function(event){
+      //this.sceneWidth = $(".scene").outerWidth();
+      //this.vignetteWidth = $(".scene .image").outerWidth();
+
+      this.dragging = true;
+
+      this.startX = event.detail.x;//0;
+      this.startY = event.detail.y;//0;
+
+      this.startLeft = this.$.view.style.marginLeft.replace("px", "");
+      this.startTop = this.$.view.style.marginTop.replace("px", "");
+
+      /**
+       this.startX = Math.ceil(event.pageX);
+       this.startY = Math.ceil(event.pageY);
+
+       if(!this.startX && !this.startY){
+        this.startX = event.originalEvent.touches[0].pageX;
+        this.startY = event.originalEvent.touches[0].pageY;
+      }
+       **/
+
+      //this.startLeft = $(".scene > .image").css("margin-left").replace("px", "");
+      //this.startTop = $(".scene > .image").css("margin-top").replace("px", "");
+      //this.dragging = true;
+    },
+
+
+    drag: function(event){
+      if(!this.dragging){
+        this.startDrag(event);
+      }
+
+      var newX = event.detail.x;//0;
+      var newY = event.detail.y;//0;
+
+      /**
+       newX = event.pageX;
+       newY = event.pageY;
+
+       if(!newX && !newY){
+          newX = event.originalEvent.touches[0].pageX;
+          newY = event.originalEvent.touches[0].pageY;
+        }
+       **/
+
+      var deltaX = this.startX - newX;
+      var deltaY = this.startY - newY;
+
+      var newLeft = Math.ceil(this.startLeft - deltaX);
+      var newTop = Math.ceil(this.startTop - deltaY);
+
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        var minX = 0;
+
+        if(-1 * newLeft > maxX){
+          newLeft = -1*maxX;
+        }else if(-1 * newLeft < minX){
+          newLeft = -1 * minX;
+        }
+
+        this.$.view.style.marginLeft = newLeft + "px";
+      }
+
+
+
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+        var minY = 0;
+
+        if(-1 * newTop > maxY){
+          newTop = -1*maxY;
+        }else if(-1 * newTop < minY){
+          newTop = -1 * minY;
+        }
+
+        this.$.view.style.marginTop = newTop + "px";
+      }
+
+
+
+
+
+
+
+      //$(".scene > .image").css("margin-left",newLeft + "px");
+      //$(".scene > .image").css("margin-top",newTop + "px");
+
+    },
+
+    endDrag: function(){
+      // if(!this.dragging) return;
+      this.dragging = false;
+    },
+
+    paintScene: function(){
+      var context = this.$.canvas.getContext("2d");
+
+      this.set("loadingState", "loading field...");
+
+      var _bg = new Image();
+      _bg.src = this.imageUrl+"/" + this.backgroundImage;
+      _bg.onload = function() {
+
+        context.canvas.height = _bg.height / this.scalar;
+        context.canvas.width = _bg.width / this.scalar;
+        /**
+
+        this.$.targets.style.height = (_bg.height / this.scalar) + "px";
+        this.$.targets.style.width = (_bg.width / this.scalar) + "px";
+         **/
+
+        this.$.view.style.height = (_bg.height / this.scalar) + "px";
+        this.$.view.style.width = (_bg.width / this.scalar) + "px";
+
+        context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+        context.drawImage(_bg, 0, 0, _bg.width, _bg.height, 0, 0, _bg.width / this.scalar, _bg.height / this.scalar);
+
+        this.set("loadingState", "loading bases...");
+
+        var count = this.firstLayerImages.length;
+        this.firstLayerImages.forEach(function (image) {
+
+
+          var url = "layers/base/A0_" + image.c + "_" + image.p + "_base.png";
+
+          var _img = new Image();
+          _img.src = this.imageUrl + "/" + url;
+          _img.onload = function () {
+            count--;
+            context.drawImage(_img, 0, 0, _img.width, _img.height, image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
+            if(count == 0){
+              this.loadSecondLayerImages();
+            }
+          }.bind(this);
+        }.bind(this));
+
+
+        /**
+         this.secondLayerImages.forEach(function(image){
+
+          var url = ""
+
+          var isStatic = false;
+
+          var url = "layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
+
+          if(image.p == 3){
+            if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
+              //continue
+            }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
+              //continue
+            }else{
+              return;
+            }
+          }else if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
+            return;
+          }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
+            return;
+          }
+
+          if(image.n=="e1"){
+            isStatic = true;
+          }
+
+
+          var _img = new Image();
+          _img.src = this.imageUrl+"/" + url;
+          _img.onload = function(){
+            if(!isStatic){
+              context.globalAlpha = .5;
+            }
+            context.drawImage(_img, 0, 0, _img.width , _img.height , image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
+            context.globalAlpha = 1;
+          }.bind(this);
+        }.bind(this));
+         }.bind(this);
+         **/
+
+      }.bind(this);
+    },
+
+    loadSecondLayerImages: function(){
+      var context = this.$.canvas.getContext("2d");
+
+      this.set("loadingState", "loading defenses...");
+
+
+
+      this.models.forEach(function(model){
+        model.options.forEach(function(option){
+          option.items.forEach(function(item){
+            if(item.selected){
+
+              var _image = null;
+              this.secondLayerImages.forEach(function(image){
+                if(image.c == model.color && ("p" + image.p) == model.sku && item.sku == image.n){
+                  _image = image;
+                }
+              }, this);
+              var url = "layers/items/A0_" + model.color + "_" + model.sku + "_"+item.sku+".png";
+              var _img = new Image();
+                _img.src = this.imageUrl+"/" + url;
+                _img.onload = function(){
+                  context.drawImage(_img, 0, 0, _img.width , _img.height , _image.x / this.scalar, _image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
+                }.bind(this);
+              }
+          },this);
+        },this);
+      },this);
+
+      this.secondLayerImages.forEach(function(image){
+
+        var url = ""
+
+        var isStatic = false;
+
+        var url = "layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
+        /**
+        if(image.p == 3){
+          if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
+            //continue
+          }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
+            //continue
+          }else{
+            return;
+          }
+        }else if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
+          return;
+        }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
+          return;
+        }else**/ if(image.n=="e1"){
+          isStatic = true;
+        }else{
+          return;
+        }
+
+
+        var _img = new Image();
+        _img.src = this.imageUrl+"/" + url;
+        _img.onload = function(){
+          if(!isStatic){
+            context.globalAlpha = .5;
+          }
+          context.drawImage(_img, 0, 0, _img.width , _img.height , image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
+          context.globalAlpha = 1;
+        }.bind(this);
+      }.bind(this));
+    }
+
+  });
+
+</script>

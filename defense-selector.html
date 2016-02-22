@@ -1,0 +1,1233 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="defense-canvas.html">
+
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../paper-styles/color.html">
+
+<link rel="import" href="../paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="../paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../paper-material/paper-material.html">
+<link rel="import" href="../paper-header-panel/paper-header-panel.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-card/paper-card.html">
+
+
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+
+<link rel="import" href="../platinum-sw/platinum-sw-register.html">
+<link rel="import" href="../platinum-sw/platinum-sw-cache.html">
+
+<!--
+An element to start from.
+
+Example:
+
+    <defense-selector></defense-selector>
+
+@demo
+-->
+<dom-module id="defense-selector">
+
+  <style is="custom-style">
+    :host {
+      font-family: 'Roboto';
+      display: block;
+      height: 100%;
+    }
+
+    :host :focus{
+      outline: none;
+    }
+
+    :host paper-drawer-panel{
+
+    }
+
+    :host paper-material{
+      padding: 16px;
+    }
+
+    :host .toolbar {
+      padding: 8px;
+    }
+
+    :host #mainContainer{
+      postition: relative;
+    }
+
+    :host #scene{
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: hidden;
+    }
+
+    :host #vignette{
+      position: relative;
+    }
+
+    :host ::content #main #scrim{
+      display: none;
+    }
+
+    :host ::content #targets{
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    :host ::content .target{
+      width: 15%;
+      height: 25%;
+      position: absolute;
+      cursor: pointer;
+    }
+
+
+
+    :host ::content #markers .target{
+      opacity: .25;
+      border-radius: 50%;
+      border-width: 20px;
+      border-color: rgba(255,255,255,.5);
+      border-style: dashed;
+      background-color: rgba(255,255,255,.2);
+      /*transition: opacity 250ms linear;*/
+    }
+
+    :host ::content #markers .target.selected{
+      opacity: 1;
+    }
+
+
+    :host ::content .vignette-layer{
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-repeat: no-repeat;
+      transition: opacity 250ms linear;
+
+      background-size: 100%;
+    }
+
+    :host ::content .vignette-layer.disabled{
+      opacity: .7;
+    }
+
+    :host #menuButton{
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(255,255,255,.5);
+      border-radius: 50%;
+    }
+
+    :host #downloadImages{
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      background: rgba(255,255,255,.5);
+      border-radius: 50%;
+    }
+
+    :host #zoomIn{
+      position: absolute;
+      right: 8px;
+      bottom: 56px;
+      background: rgba(255,255,255,.5);
+      border-radius: 50%;
+    }
+
+    :host #zoomOut{
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      background: rgba(255,255,255,.5);
+      border-radius: 50%;
+    }
+
+    :host #refresh{
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      background: rgba(255,255,255,.5);
+      border-radius: 50%;
+    }
+
+    :host paper-dropdown-menu{
+      width: calc(100% - 32px);
+      padding: 8px 16px;
+    }
+
+    :host ::content #selector{
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      @apply(--layout-vertical);
+    }
+
+    :host ::content #selector > div{
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+    }
+
+    :host ::content #selector paper-card{
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+      max-height: 25%;
+    }
+
+    :host ::content #selector paper-card .card-content{
+      @apply(--layout-flex);
+      @apply(--layout-horizontal);
+    }
+
+    :host ::content #selector paper-card .card-content .thumbnail{
+      @apply(--layout-flex);
+      margin: 8px;
+      max-width: calc(50% - 16px);
+    }
+
+    :host ::content .header.paper-card .title-text.paper-card{
+      padding: 8px;
+    }
+
+    :host ::content paper-card .card-content{
+      padding: 8px;
+    }
+
+    /**
+    :host ::content paper-material.option{
+      float: left;
+      width: 100%;
+      height: 25%;
+      padding: 0px;
+    }
+    **/
+
+    :host ::content .thumbnail{
+
+      background-size: 90%;
+      background-position: center center;
+      background-repeat: no-repeat;
+      cursor: pointer;
+      position: relative;
+    }
+
+    :host ::content paper-material.thumbnail{
+      padding: 0px;
+    }
+
+    :host ::content .thumbnail:hover{
+      background-color: rgba(255,255,255,.2);
+    }
+
+    :host ::content .thumbnail.selected{
+      background-color: rgba(255,255,255,.4);
+      cursor: default;
+    }
+
+    :host ::content .thumbnail .label{
+      position: absolute;
+      width: 100%;
+      bottom: 0px;
+      text-align: center;
+      font-size: 13px;
+    }
+    #drawer{
+      --paper-drawer-panel-left-drawer-container: {
+        background-color: rgba(255,255,255,.8);
+      };
+    }
+
+    :host ::content defense-canvas{
+      height: 100%;
+      width: 100%;
+    }
+
+    /* MOBILE */
+    @media (max-width: 600px) {
+      :host #scene{
+        width: 100%;
+        height: 100%;
+      }
+
+      :host ::content .thumbnail{
+        background-size: 60%;
+      }
+
+    }
+
+
+    /**
+    .octagon {
+      -webkit-transform: rotateX(-3deg) rotateY(22.5deg);
+      transform: rotateX(-3deg) rotateY(22.5deg);
+      -webkit-animation: 5s turn;
+      animation: 5s turn;
+      -webkit-animation-timing-function: ease-out;
+      animation-timing-function: ease-out;
+      -webkit-transform-style: preserve-3d;
+      transform-style: preserve-3d;
+    }
+    .octagon, .octagon > div {
+      box-sizing: border-box;
+      left: 50%;
+      position: absolute;
+      top: 50%;
+    }
+
+    .face {
+      height: 120px;
+      margin: -60px;
+      overflow: hidden;
+      width: 120px;
+      position: relative;
+      -webkit-transform-style: preserve-3d;
+      transform-style: preserve-3d;
+      border: 2px solid #333;
+    }
+
+    .face > .front, .face > .back{
+      float:left;
+      width: 100%;
+      height: 100%;
+    }
+
+    .face > .front{
+      margin-top: -100%;
+      background-size: 100%;
+    }
+
+    .face > .back{
+      background: rgba(0, 0, 0, 0.9);
+    }
+
+    .face:nth-child(1) {
+      -webkit-transform: rotateY(0deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(0deg) translateZ(calc((144px) + 1px));
+    }
+    .face:nth-child(2) {
+      -webkit-transform: rotateY(45deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(45deg) translateZ(calc((144px) + 1px));
+    }
+    .face:nth-child(4) {
+      -webkit-transform: rotateY(90deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(90deg) translateZ(calc((144px) + 1px));
+    }
+    .face:nth-child(5) {
+      -webkit-transform: rotateY(135deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(135deg) translateZ(calc((144px) + 1px));
+    }
+    .face:nth-child(7) {
+      -webkit-transform: rotateY(180deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(180deg) translateZ(calc((144px) + 1px));
+    }
+    .face:nth-child(8) {
+      -webkit-transform: rotateY(225deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(225deg) translateZ(calc((144px) + 1px));
+    }
+    .face:nth-child(10) {
+      -webkit-transform: rotateY(270deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(270deg) translateZ(calc((144px) + 1px));
+    }
+    .face:nth-child(11) {
+      -webkit-transform: rotateY(315deg) translateZ(calc((144px) + 1px));
+      transform: rotateY(315deg) translateZ(calc((144px) + 1px));
+    }
+
+    @keyframes turn {
+      0% {
+        -webkit-transform: rotateX(-3deg) rotateY(0deg);
+        transform: rotateX(-3deg) rotateY(0deg);
+      }
+      to {
+        -webkit-transform: rotateX(-3deg) rotateY(382.5deg);
+        transform: rotateX(-3deg) rotateY(382.5deg);
+      }
+    }
+
+    **/
+
+    :host ::content .target.p1{
+      left: 18%;
+      top: 20%;
+      transform: rotateX(-53deg) rotateZ(37deg);
+    }
+
+    :host ::content #markers .target.selected.p1{
+      animation: 5s spin-1 infinite;
+      animation-timing-function: linear;
+      -webkit-animation: 5s spin-1 infinite;
+      -webkit-animation-timing-function: linear;
+    }
+
+    @-webkit-keyframes spin-1 {
+      0% {
+        -webkit-transform: rotateX(-53deg) rotateZ(0deg);
+      }
+      to {
+        -webkit-transform: rotateX(-53deg) rotateZ(360deg);
+      }
+    }
+
+    @keyframes spin-1 {
+      0% {
+        transform: rotateX(-53deg) rotateZ(0deg);
+      }
+      to {
+        transform: rotateX(-53deg) rotateZ(360deg);
+      }
+    }
+
+
+
+    :host ::content .target.p2{
+      left: 29%;
+      top: 29%;
+      width: 14%;
+      height: 26%;
+      transform: rotateX(-53deg) rotateZ(37deg);
+    }
+
+    :host ::content #markers .target.selected.p2{
+      animation: 5s spin-2 infinite;
+      animation-timing-function: linear;
+      -webkit-animation: 5s spin-2 infinite;
+      -webkit-animation-timing-function: linear;
+    }
+
+    @-webkit-keyframes spin-2 {
+      0% {
+        -webkit-transform: rotateX(-53deg) rotateZ(0deg);
+      }
+      to {
+        -webkit-transform: rotateX(-53deg) rotateZ(360deg);
+      }
+    }
+
+    @keyframes spin-2 {
+      0% {
+        transform: rotateX(-53deg) rotateZ(0deg);
+      }
+      to {
+        transform: rotateX(-53deg) rotateZ(360deg);
+      }
+    }
+
+    :host ::content .target.p3{
+      left: 40%;
+      top: 39%;
+      transform: rotateX(-48deg) rotateZ(37deg);
+    }
+
+    :host ::content #markers .target.selected.p3{
+      animation: 5s spin-3 infinite;
+      animation-timing-function: linear;
+      -webkit-animation: 5s spin-3 infinite;
+      -webkit-animation-timing-function: linear;
+    }
+
+    @-webkit-keyframes spin-3 {
+      0% {
+        -webkit-transform: rotateX(-48deg) rotateZ(0deg);
+      }
+      to {
+        -webkit-transform: rotateX(-48deg) rotateZ(360deg);
+      }
+    }
+
+    @keyframes spin-3 {
+      0% {
+        transform: rotateX(-48deg) rotateZ(0deg);
+      }
+      to {
+        transform: rotateX(-48deg) rotateZ(360deg);
+      }
+    }
+
+    :host ::content .target.p4{
+      left: 53%;
+      top: 51%;
+      width: 16%;
+      height: 28%;
+      transform: rotateX(-43deg) rotateZ(37deg);
+    }
+
+    :host ::content #markers .target.selected.p4{
+      animation: 5s spin-4 infinite;
+      animation-timing-function: linear;
+      -webkit-animation: 5s spin-4 infinite;
+      -webkit-animation-timing-function: linear;
+    }
+
+    @-webkit-keyframes spin-4 {
+      0% {
+        -webkit-transform: rotateX(-43deg) rotateZ(0deg);
+      }
+      to {
+        -webkit-transform: rotateX(-43deg) rotateZ(360deg);
+      }
+    }
+
+    @keyframes spin-4 {
+      0% {
+        transform: rotateX(-43deg) rotateZ(0deg);
+      }
+      to {
+        transform: rotateX(-43deg) rotateZ(360deg);
+      }
+    }
+
+    :host ::content .target.p5{
+      left: 68%;
+      top: 64%;
+      width: 17%;
+      height: 29%;
+      transform: rotateX(-38deg) rotateZ(37deg);
+    }
+
+    :host ::content #markers .target.selected.p5{
+      animation: 5s spin-5 infinite;
+      animation-timing-function: linear;
+      -webkit-animation: 5s spin-5 infinite;
+      -webkit-animation-timing-function: linear;
+    }
+
+    @-webkit-keyframes spin-5{
+      0% {
+        -webkit-transform: rotateX(-38deg) rotateZ(0deg);
+      }
+      to {
+        -webkit-transform: rotateX(-38deg) rotateZ(360deg);
+      }
+    }
+
+    @keyframes spin-5 {
+      0% {
+        transform: rotateX(-38deg) rotateZ(0deg);
+      }
+      to {
+        transform: rotateX(-38deg) rotateZ(360deg);
+      }
+    }
+
+    :host ::content .toolbar-tools.paper-toolbar > .title{
+      margin-left: 0px;
+    }
+
+
+
+  </style>
+
+  <template>
+
+    <paper-drawer-panel id="drawer" responsive-width="20000px" disable-swipe>
+      <paper-header-panel drawer>
+        <paper-toolbar><span class="title">Defenses</span><paper-icon-button icon="close" paper-drawer-toggle></paper-icon-button></paper-toolbar>
+        <!--
+        <paper-dropdown-menu label="Select a Model">
+          <paper-listbox class="dropdown-content" selected="{{selectedModel}}" attr-for-selected="value" selected-attribute="active">
+            <template is="dom-repeat" items="{{models}}" as="model">
+              <paper-item value="{{model}}" hidden="{{!isSelectable(model.static,model.restricted)}}">{{model.name}}</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+        -->
+        <div id="selector">
+          <paper-dropdown-menu label="Select a Team" hidden>
+            <paper-listbox class="dropdown-content" selected="{{color}}" attr-for-selected="value" selected-attribute="active">
+              <paper-item value="red">Red</paper-item>
+              <paper-item value="blue">Blue</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
+          <template is="dom-repeat" items="{{models}}" as="model">
+            <div hidden$="{{!model.selected}}">
+              <template is="dom-repeat" items="{{model.options}}" as="option">
+                <paper-card heading="[[option.name]]" elevation="0" class$="[[getOptionClass(option)]]">
+                  <div class="card-content">
+                    <template is="dom-repeat" items="{{option.items}}">
+                      <paper-material model$="{{model.id}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
+                                      class$="thumbnail {{selectedCss(item.name,selectedModel.selectedItem)}}" style$="{{getThumbCss(item.name)}}"
+                                      layer$="{{selectedModel.sku}}" item$="{{item.name}}" on-tap="selectItem">
+                        <span class="label">{{item.name}}</span>
+                      </paper-material>
+                    </template>
+                  </div>
+                </paper-card>
+              </template>
+            </div>
+          </template>
+        </div>
+      </paper-header-panel>
+      <div main>
+        <div id="scene">
+
+          <defense-canvas id="canvas" models="{{models}}" image-url="{{imageUrl}}" background-image="{{backgroundImage}}" first-layer-images="{{firstLayerImages}}" second-layer-images="{{secondLayerImages}}"></defense-canvas>
+
+
+          <!--
+          <div id="vignette" >
+            <content select=".vignette-layer"></content>
+            <div class="vignette-layer">
+              <div id="markers">
+                <template is="dom-repeat" items="{{models}}" as="model">
+                  <div class$="target [[model.sku]] {{selectedCss(model.name,selectedModel.name)}}" hidden="{{!isSelectable(model.static,model.restricted)}}"></div>
+                </template>
+              </div>
+
+            </div>
+            <template is="dom-repeat" items="{{models}}" as="model">
+              <template is="dom-if" if="{{isSelectable(model.static,model.restricted)}}">
+                <template is="dom-repeat" items="{{model.options}}" as="option">
+                  <template is="dom-repeat" items="{{option.items}}">
+                    <div layer$="[[model.name]]" class$="vignette-layer {{model.sku}}" hidden="{{!item.selected}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[item.name]].png');"></div>
+                  </template>
+                </template>
+              </template>
+              <div layer$="[[model.name]]" class$="disabled vignette-layer {{model.sku}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[model.options.0.items.0.name]].png');" hidden="{{!model.static}}"></div>
+              <div layer$="[[model.name]]" class$="disabled vignette-layer {{model.sku}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[model.options.0.items.0.name]].png');" hidden="{{!model.restricted}}"></div>
+              <div layer$="[[model.name]]" class$="disabled vignette-layer {{model.sku}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[model.options.0.items.1.name]].png');" hidden="{{!model.restricted}}"></div>
+
+            </template>
+            <div id="targets">
+              <template is="dom-repeat" items="{{models}}" as="model">
+                <div class$="target [[model.sku]]" model$="[[model.sku]]" on-tap="openModel" hidden="{{!isSelectable(model.static,model.restricted)}}"></div>
+              </template>
+            </div>
+          </div>
+          -->
+          <!--
+          <paper-icon-button id="downloadImages" icon="cloud-download" on-tap="downloadImages"></paper-icon-button>
+          -->
+          <paper-icon-button id="zoomIn" icon="add" on-tap="zoomIn"></paper-icon-button>
+          <paper-icon-button id="zoomOut" icon="remove" on-tap="zoomOut"></paper-icon-button>
+          <paper-icon-button id="menuButton" icon="menu" paper-drawer-toggle hidden></paper-icon-button>
+          <!--
+          <paper-icon-button id="refresh" icon="refresh" on-tap="refresh" hidden></paper-icon-button>
+          -->
+        </div>
+
+      </div>
+      <!--
+      <paper-header-panel main>
+        <paper-toolbar><paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button></paper-toolbar>
+        <div id="viewport">
+          <div id="vignette"></div>
+        </div>
+        <neon-animated-pages selected="[[selected]]" entry-animation="[[entryAnimation]]" exit-animation="[[exitAnimation]]">
+          <neon-animatable on-tap="nextSlide">1</neon-animatable>
+          <neon-animatable on-tap="previousSlide">2</neon-animatable>
+        </neon-animated-pages>
+        <content></content>
+      </paper-header-panel>
+      -->
+    </paper-drawer-panel>
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'defense-selector',
+
+    behaviors: [
+      Polymer.IronResizableBehavior
+    ],
+
+    listeners: {
+      //'targets.track' : 'vignetteDrag',
+      //'selector.tap': 'selectorTap',
+      //"iron-resize" : "onResize"
+      "canvas.model-selected": "onModelSelect"
+    },
+
+    properties: {
+
+      precacheUrls: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+      imageUrl: {
+        type: String,
+        value: "localhost:9092"
+      },
+
+      models: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      rules: {
+        type: Object,
+        value: null,
+        observer: 'onRulesChange'
+      },
+
+      selectedModel: {
+        type: Object,
+        value: null
+      },
+
+      /**
+       * `selected` the currently selected slide
+       * @type {number}
+       */
+      selected: {
+        type: Number,
+        value: 0
+      },
+
+      /**
+       * `vignetteUrl` the base url for the vignete
+       * @type {string}
+       */
+      vignetteUrl: {
+        type: String,
+        value: null
+      },
+
+      //dragging: false,
+      startX: 0,
+      startY: 0,
+      startLeft: 0,
+      startTop: 0,
+      vignetteWidth: 600,
+      sceneWidth: 600,
+
+      backgroundImage: {
+        type: String,
+        value: null
+      },
+
+      firstLayerImages: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      secondLayerImages: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+
+
+
+
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+
+      /**
+      var vignetteWidth = this.$.vignette.offsetWidth;
+      var sceneWidth = this.$.scene.offsetWidth;
+
+      if(vignetteWidth > sceneWidth){
+        this.$.vignette.style.marginLeft = ((vignetteWidth - sceneWidth)/-1.5) + "px";
+      }
+
+      var vignetteHeight = this.$.vignette.offsetHeight;
+      var sceneHeight = this.$.scene.offsetHeight;
+
+      if(vignetteHeight > sceneHeight){
+        this.$.vignette.style.marginTop = ((vignetteHeight - sceneHeight)/-1.5) + "px";
+      }
+       **/
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+
+    // Element Behavior
+
+    /**
+     * Go to next slide
+     */
+    nextSlide: function(){
+      this.entryAnimation = 'slide-from-right-animation';
+      this.exitAnimation = 'slide-left-animation';
+      this.selected = this.selected === 4 ? 0 : (this.selected + 1);
+    },
+
+    /**
+     * Go to previous slide
+     */
+    previousSlide: function(){
+      this.entryAnimation = 'slide-from-left-animation';
+      this.exitAnimation = 'slide-right-animation';
+      this.selected = this.selected === 0 ? 4 : (this.selected - 1);
+    },
+
+    selectItem: function(event){
+      var modelId = Polymer.dom(event).rootTarget.getAttribute("model");
+      for(var i = 0; i < this.models.length; i++){
+        var model = this.models[i];
+        if(model.id == modelId){
+          for(var x = 0; x < model.options.length; x++){
+            var option = model.options[x];
+            for(var y = 0; y < option.items.length; y++){
+              var item = option.items[y];
+              if(item.sku == event.model.item.sku){
+                this.set("models."+ i + ".options." + x + ".items." + y + ".selected", true);
+              }else{
+                this.set("models."+ i + ".options." + x + ".items." + y + ".selected", false);
+              }
+            }
+          }
+        }
+      }
+
+      //var model = event.model;
+      //model.set("item.selected", true);
+      this.$.canvas.paintScene();
+    },
+
+    selectorTap: function(event){
+
+      var selectedLayer = Polymer.dom(event).rootTarget.getAttribute("layer");
+      var selectedItem = Polymer.dom(event).rootTarget.getAttribute("item");
+      this.set("selectedModel.selectedItem",selectedItem);
+
+      var vignetteLayer = document.querySelector(".vignette-layer."+selectedLayer);
+
+      vignetteLayer.style.opacity = 0;
+      setTimeout(function(){
+        vignetteLayer.style.backgroundImage = "url('../demo/layers/"+selectedLayer+"/"+selectedItem+".png')";
+        vignetteLayer.style.opacity = 1;
+      },250);
+
+
+    },
+
+    vignetteDrag: function(event){
+      if(event.detail.state == "start"){
+        this.startDrag(event);
+      }else if(event.detail.state == "end"){
+        this.endDrag();
+      }else{
+        this.drag(event);
+      }
+    },
+
+    startDrag: function(event){
+      //this.sceneWidth = $(".scene").outerWidth();
+      //this.vignetteWidth = $(".scene .image").outerWidth();
+
+      this.dragging = true;
+
+      this.startX = event.detail.x;//0;
+      this.startY = event.detail.y;//0;
+
+      this.startLeft = this.$.vignette.style.marginLeft.replace("px", "");
+      this.startTop = this.$.vignette.style.marginTop.replace("px", "");
+
+      /**
+      this.startX = Math.ceil(event.pageX);
+      this.startY = Math.ceil(event.pageY);
+
+      if(!this.startX && !this.startY){
+        this.startX = event.originalEvent.touches[0].pageX;
+        this.startY = event.originalEvent.touches[0].pageY;
+      }
+       **/
+
+      //this.startLeft = $(".scene > .image").css("margin-left").replace("px", "");
+      //this.startTop = $(".scene > .image").css("margin-top").replace("px", "");
+      //this.dragging = true;
+    },
+
+
+    drag: function(event){
+        if(!this.dragging){
+          this.startDrag(event);
+        }
+
+        var newX = event.detail.x;//0;
+        var newY = event.detail.y;//0;
+
+      /**
+        newX = event.pageX;
+        newY = event.pageY;
+
+        if(!newX && !newY){
+          newX = event.originalEvent.touches[0].pageX;
+          newY = event.originalEvent.touches[0].pageY;
+        }
+       **/
+
+        var deltaX = this.startX - newX;
+        var deltaY = this.startY - newY;
+
+        var newLeft = Math.ceil(this.startLeft - deltaX);
+        var newTop = Math.ceil(this.startTop - deltaY);
+
+
+        var vignetteWidth = this.$.vignette.offsetWidth;
+        var sceneWidth = this.$.scene.offsetWidth;
+
+        if(sceneWidth < vignetteWidth){
+          var maxX = vignetteWidth - sceneWidth;
+          var minX = 0;
+
+          if(-1 * newLeft > maxX){
+            newLeft = -1*maxX;
+          }else if(-1 * newLeft < minX){
+            newLeft = -1 * minX;
+          }
+
+          this.$.vignette.style.marginLeft = newLeft + "px";
+        }
+
+
+
+        var vignetteHeight = this.$.vignette.offsetHeight;
+        var sceneHeight = this.$.scene.offsetHeight;
+
+        if(sceneHeight < vignetteHeight){
+          var maxY = vignetteHeight - sceneHeight;
+          var minY = 0;
+
+          if(-1 * newTop > maxY){
+            newTop = -1*maxY;
+          }else if(-1 * newTop < minY){
+            newTop = -1 * minY;
+          }
+
+          this.$.vignette.style.marginTop = newTop + "px";
+        }
+
+
+
+
+
+
+
+        //$(".scene > .image").css("margin-left",newLeft + "px");
+        //$(".scene > .image").css("margin-top",newTop + "px");
+
+      },
+
+      endDrag: function(){
+       // if(!this.dragging) return;
+        this.dragging = false;
+      },
+
+    zoomIn: function(){
+      if(this.$.canvas.scalar > 1){
+        this.$.canvas.set("scalar", this.$.canvas.scalar - .25);
+        this.$.canvas.paintScene();
+      }
+
+      /**
+      var sceneWidth = this.$.scene.offsetWidth;
+      var sceneHeight = this.$.scene.offsetHeight
+
+      var vignetteWidth = this.$.vignette.offsetWidth;
+      var vignetteHeight = this.$.vignette.offsetHeight;
+
+      var marginLeft = 0;
+      if(this.$.vignette.style.marginLeft){
+        marginLeft = this.$.vignette.style.marginLeft.replace("px","");
+      }
+
+      var marginTop = 0;
+      if(this.$.vignette.style.marginTop) {
+        marginTop = this.$.vignette.style.marginTop.replace("px", "");
+      }
+
+      var leftMarginPercentage = marginLeft / vignetteWidth;
+      var topMarginPercentage = marginTop / vignetteHeight;
+
+      vignetteWidth *= 1.25;
+      vignetteHeight *= 1.25;
+      leftMarginPercentage *= 1.25;
+      topMarginPercentage *= 1.25;
+
+      marginLeft = parseInt(vignetteWidth * leftMarginPercentage);
+      marginTop = parseInt(vignetteHeight * topMarginPercentage);
+      //calculate margin as a percentage
+
+      this.$.vignette.style.marginLeft = marginLeft + "px";
+      this.$.vignette.style.marginTop = marginTop + "px";
+      this.$.vignette.style.width = vignetteWidth + "px";
+      this.$.vignette.style.height = vignetteHeight + "px";
+      **/
+    },
+
+    zoomOut: function(){
+      this.$.canvas.set("scalar", this.$.canvas.scalar + .25);
+      this.$.canvas.paintScene();
+      /**
+      var sceneWidth = this.$.scene.offsetWidth;
+      var sceneHeight = this.$.scene.offsetHeight
+
+      var vignetteWidth = this.$.vignette.offsetWidth;
+      var vignetteHeight = this.$.vignette.offsetHeight;
+
+      if(vignetteWidth/1.25 < sceneWidth || vignetteHeight/1.25 < sceneHeight){
+        return;
+      }
+
+      var marginLeft = 0;
+      if(this.$.vignette.style.marginLeft){
+        marginLeft = this.$.vignette.style.marginLeft.replace("px","");
+      }
+
+      var marginTop = 0;
+      if(this.$.vignette.style.marginTop) {
+        marginTop = this.$.vignette.style.marginTop.replace("px", "");
+      }
+
+      var leftMarginPercentage = marginLeft / vignetteWidth;
+      var topMarginPercentage = marginTop / vignetteHeight;
+
+      vignetteWidth /= 1.25;
+      vignetteHeight /= 1.25;
+      leftMarginPercentage /= 1.25;
+      topMarginPercentage /= 1.25;
+
+      marginLeft = vignetteWidth * leftMarginPercentage;
+      marginTop = vignetteHeight * topMarginPercentage;
+
+      if(vignetteWidth - sceneWidth < -1 * marginLeft){
+        marginLeft = vignetteWidth - sceneWidth;
+        marginLeft *= -.5;
+      }
+
+      if(vignetteHeight - sceneHeight < -1 * marginTop){
+        marginTop = vignetteHeight - sceneHeight;
+        marginTop *= -.5;
+      }
+
+      //calculate the minimum margin left
+
+      this.$.vignette.style.marginLeft = marginLeft + "px";
+      this.$.vignette.style.marginTop = marginTop + "px";
+      this.$.vignette.style.width = vignetteWidth + "px";
+      this.$.vignette.style.height = vignetteHeight + "px";
+       **/
+    },
+
+    getThumbCss: function(item){
+      return "background-image:url('../demo/thumbs/"+item+".png');";
+    },
+
+    openModel: function(event){
+      var selectedModelSku = Polymer.dom(event).rootTarget.getAttribute("model");
+      this.models.forEach(function(model){
+        if(model.sku.toLowerCase() == selectedModelSku.toLowerCase()){
+          this.set("selectedModel", model);
+        }
+      }, this);
+      this.$.drawer.openDrawer();
+    },
+
+    selectedCss: function(modelName, selectedModel){
+      if(modelName.toLowerCase() == selectedModel.toLowerCase()){
+        return "selected";
+      }
+      return "";
+    },
+
+    getElevation: function(modelName, selectedModel){
+      if(modelName.toLowerCase() == selectedModel.toLowerCase()){return 1;
+      }
+      return 0;
+    },
+
+    /**
+    onResize: function(){
+      this.$.vignette.style.marginLeft = "0px";
+      this.$.vignette.style.marginTop = "0px";
+    },
+    **/
+    /**
+    downloadImages: function(){
+      this.$.imageService.register();
+    },
+    **/
+
+    onModelSelect: function(event){
+      for(var i = 0; i < this.models.length; i++){
+        var model = this.models[i];
+        if(model.id == event.detail.id){
+          this.set("models." + i + ".selected",true);
+        }else{
+          this.set("models." + i + ".selected",false);
+        }
+      }
+      this.$.drawer.openDrawer();
+    },
+
+    initPrecache: function(){
+
+      //this.$.canvas.initPrecache();
+      this.$.canvas.set("loaded",true);
+      this.$.canvas.paintScene();
+
+      /**
+      this.models.forEach(function(model){
+        var _model = model;
+        model.options.forEach(function(option){
+          option.items.forEach(function(item){
+            this.push("precacheUrls", "http://"+this.imageUrl+"/layers/"+_model.name+"/"+item+".png");
+          }, this);
+        }, this);
+      }, this);
+       **/
+    },
+
+    getOptionClass: function(option){
+      var classes = "";
+      if(option.disabled){
+        classes += "disabled";
+      }
+      return classes;
+    },
+
+    isSelectable: function(isStatic, isRestricted){
+      return !isStatic && !isRestricted;
+    },
+
+    onRulesChange: function(data) {
+      if (this.models) {
+        for (var x = 0; x < this.models.length; x++) {
+          var model = this.models[x];
+          this.set("models." + x + ".restricted", false);
+          this.set("models." + x + ".static", false);
+          for (var y = 0; y < model.options.length; y++) {
+            var option = model.options[y];
+            this.set("models." + x + ".options." + y + ".disabled", false);
+            for (var z = 0; z < option.items.length; z++) {
+              var item = option.items[z];
+              this.set("models." + x + ".options." + y + ".items." + z + ".disabled", false);
+            }
+          }
+        }
+
+        if (this.rules) {
+
+          var validConfig = true;
+
+          this.rules.forEach(function (rule) {
+            if (rule.optionSku && rule.maxValueCount) {
+              var selectedItemCount = 0;
+              for (var x = 0; x < this.models.length; x++) {
+                var model = this.models[x];
+                for (var y = 0; y < model.options.length; y++) {
+                  var option = model.options[y];
+                  if (option.sku != rule.optionSku) continue;
+
+                  for (var z = 0; z < option.items.length; z++) {
+                    var item = option.items[z];
+                    if (item.selected) {
+                      selectedItemCount++;
+                    }
+                  }
+                }
+              }
+
+              if (selectedItemCount >= rule.maxValueCount) {
+                for (var x = 0; x < this.models.length; x++) {
+                  var model = this.models[x];
+                  for (var y = 0; y < model.options.length; y++) {
+                    var option = model.options[y];
+                    if (option.sku != rule.optionSku) continue;
+
+                    for (var z = 0; z < option.items.length; z++) {
+                      var item = option.items[z];
+                      if (!item.selected) {
+                        this.set("models." + x + ".options." + y + ".items." + z + ".disabled", true);
+                      }
+                    }
+                  }
+                }
+
+                if (selectedItemCount > rule.maxValueCount) {
+                  validConfig = false;
+                }
+              }
+            } else if (rule.optionSku && rule.disabled) {
+              for (var x = 0; x < this.models.length; x++) {
+                var model = this.models[x];
+                for (var y = 0; y < model.options.length; y++) {
+                  var option = model.options[y];
+                  if (option.sku != rule.optionSku) continue;
+                  this.set("models." + x + ".options." + y + ".disabled", true);
+                }
+              }
+            } else if (rule.modelSku && rule.restricted) {
+              for (var x = 0; x < this.models.length; x++) {
+                var model = this.models[x];
+                if (model.sku != rule.modelSku) continue;
+                this.set("models." + x + ".restricted", true);
+              }
+            } else if (rule.modelSku && rule.static) {
+              for (var x = 0; x < this.models.length; x++) {
+                var model = this.models[x];
+                if (model.sku != rule.modelSku) continue;
+                this.set("models." + x + ".static", true);
+              }
+            }
+          }, this);
+        }
+
+      }
+
+
+    }
+
+  });
+
+</script>
