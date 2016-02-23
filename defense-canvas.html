@@ -343,13 +343,15 @@ Example:
     },
 
     onImageServiceStateChange: function(state){
-      if(state == "installed" || state == "updated"){
-        console.log("sw is good");
-        this.set("loaded", true);
-      }else if(state == "unsupported"){
-        alert("We're sorry, but your browser doesn't support service workers. Please try the latest version of Chrome.");
-      }else{
-        alert("A service worker error occurred");
+      if(!this.installed){
+        if(state == "installed" || state == "updated"){
+          console.log("sw is good");
+          this.set("loaded", true);
+        }else if(state == "unsupported"){
+          alert("We're sorry, but your browser doesn't support service workers. Please try the latest version of Chrome.");
+        }else{
+          alert("A service worker error occurred");
+        }
       }
     },
 
