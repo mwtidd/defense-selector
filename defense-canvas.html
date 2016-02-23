@@ -297,23 +297,26 @@ Example:
     // Element Behavior
 
     initPrecache: function(){
-      this.set("loadingState", "indexing images...");
-      this.push("precacheUrls", this.imageUrl+"/" + this.backgroundImage);
+        if(!this.installed){
+        this.set("loadingState", "indexing images...");
+        this.push("precacheUrls", this.imageUrl+"/" + this.backgroundImage);
 
 
-      this.firstLayerImages.forEach(function(image){
-        var url = "/layers/base/A0_" + image.c + "_" + image.p + "_base.png";
-        this.push("precacheUrls", this.imageUrl+"/" + url);
-      }, this);
+        this.firstLayerImages.forEach(function(image){
+          var url = "/layers/base/A0_" + image.c + "_" + image.p + "_base.png";
+          this.push("precacheUrls", this.imageUrl+"/" + url);
+        }, this);
 
-      this.secondLayerImages.forEach(function(image){
-        var url = "/layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
-        this.push("precacheUrls", this.imageUrl+"/" + url);
-      }, this);
+        this.secondLayerImages.forEach(function(image){
+          var url = "/layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
+          this.push("precacheUrls", this.imageUrl+"/" + url);
+        }, this);
 
-      this.set("loadingState", "downloading images...");
-      if(!this.installed){
+        this.set("loadingState", "downloading images...");
+
         this.$.imageService.register();
+      }else{
+        this.set("loaded", true);
       }
     },
 
