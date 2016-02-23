@@ -251,7 +251,7 @@ Example:
 
       imageUrl: {
         type: "String",
-        value: "localhost"
+        value: ""
       },
 
       models: {
@@ -525,6 +525,7 @@ Example:
           var url = "layers/base/A0_" + image.c + "_" + image.p + "_base.png";
 
           var _img = new Image();
+
           _img.src = this.imageUrl + "/" + url;
           _img.onload = function () {
             count--;
@@ -584,8 +585,6 @@ Example:
       var context = this.$.canvas.getContext("2d");
 
       this.set("loadingState", "loading defenses...");
-
-
 
       this.models.forEach(function(model){
         model.options.forEach(function(option){
