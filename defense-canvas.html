@@ -145,11 +145,15 @@ Example:
       <paper-progress indeterminate="[[indeterminateLoadingState]]"></paper-progress>
     </paper-dialog>
 
-    <platinum-sw-register id="imageService" state="{{imageServiceState}}">
+    <template is="dom-if" if="{{!installed}}">
+      <platinum-sw-register id="imageService" state="{{imageServiceState}}">
 
-      <platinum-sw-cache id="imageCache" precache="[[precacheUrls]]"></platinum-sw-cache>
+        <platinum-sw-cache id="imageCache" precache="[[precacheUrls]]"></platinum-sw-cache>
 
-    </platinum-sw-register>
+      </platinum-sw-register>
+    </template>
+
+
   </template>
 
 </dom-module>
@@ -172,6 +176,12 @@ Example:
     },
 
     properties: {
+
+      installed: {
+        type: Boolean,
+        value: false
+      },
+
 
       indeterminateLoadingState: {
         type: Boolean,
@@ -203,7 +213,7 @@ Example:
       imageServiceState: {
         type: Object,
         value: function(){
-          return ;
+          return {} ;
         },
         observer: 'onImageServiceStateChange'
       },
@@ -302,7 +312,9 @@ Example:
       }, this);
 
       this.set("loadingState", "downloading images...");
-      this.$.imageService.register();
+      if(!this.installed){
+        this.$.imageService.register();
+      }
     },
 
     getSelectedCss: function(isSelected){

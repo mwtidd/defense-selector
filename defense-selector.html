@@ -582,7 +582,7 @@ Example:
       <div main>
         <div id="scene">
 
-          <defense-canvas id="canvas" models="{{models}}" image-url="{{imageUrl}}" background-image="{{backgroundImage}}" first-layer-images="{{firstLayerImages}}" second-layer-images="{{secondLayerImages}}"></defense-canvas>
+          <defense-canvas id="canvas" installed="{{installed}}" models="{{models}}" image-url="{{imageUrl}}" background-image="{{backgroundImage}}" first-layer-images="{{firstLayerImages}}" second-layer-images="{{secondLayerImages}}"></defense-canvas>
 
 
           <!--
@@ -664,6 +664,11 @@ Example:
     },
 
     properties: {
+
+      installed: {
+        type: Boolean,
+        value: false
+      },
 
       precacheUrls: {
         type: Array,
