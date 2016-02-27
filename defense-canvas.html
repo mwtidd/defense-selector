@@ -331,7 +331,8 @@ Example:
         type: Object,
         value: function(){
           return null;
-        }
+        },
+        notify: true
       },
 
       staticModels: {
@@ -345,7 +346,8 @@ Example:
         type: Object,
         value: function(){
           return null;
-        }
+        },
+        notify: true
       },
 
       imageMap: {
@@ -762,6 +764,19 @@ Example:
                     } else {
                       this.set("models." + i + ".options." + x + ".items." + y + ".selected", false);
                     }
+                  }
+                }
+              }
+            }
+
+            {
+              var model = this.selectionModels[this.currentStep];
+              for (var x = 0; x < model.options.length; x++) {
+                var option = model.options[x];
+                for (var y = 0; y < option.items.length; y++) {
+                  var item = option.items[y];
+                  if (item.sku == itemSku) {
+                    this.set("selectionModels." + this.currentStep + ".options." + x + ".items." + y + ".selected", true);
                   }
                 }
               }
