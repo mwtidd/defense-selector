@@ -17,6 +17,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../platinum-sw/platinum-sw-register.html">
 <link rel="import" href="../platinum-sw/platinum-sw-cache.html">
 
+<script src="../interact/dist/interact.min.js"></script>
+
 <!--
 An element to start from.
 
@@ -56,12 +58,19 @@ Example:
     }
 
     :host #targets{
+      display: none;
+    }
+
+    :host #targets.A0, :host #targets.A180{
+      display: block;
       position: absolute;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
     }
+
+
 
     :host #targets > div{
       position: absolute;
@@ -91,35 +100,94 @@ Example:
       background: rgba(255,255,255,1);
     }
 
-    :host #targets .r{
+    :host #targets.A0 .r{
       top: 35%;
     }
 
-    :host #targets #r2 {
+    :host #targets.A0 #r2 {
        left: 34.5%;
      }
 
-    :host #targets #r4 {
-      left: 50%;
-    }
-
-    :host #targets #r5 {
-      left: 58%;
-    }
-
-    :host #targets .b{
-      top: 59%;
-    }
-
-    :host #targets #b5 {
-      left: 33%;
-    }
-
-    :host #targets #b4 {
+    :host #targets.A0 #r3 {
       left: 42%;
     }
 
-    :host #targets #b2 {
+    :host #targets.A0 #r4 {
+      left: 51%;
+    }
+
+    :host #targets.A0 #r5 {
+      left: 58%;
+    }
+
+    :host #targets.A0 .b{
+      top: 59%;
+    }
+
+    :host #targets.A0 #b5 {
+      left: 33%;
+    }
+
+    :host #targets.A0 #b4 {
+      left: 42%;
+    }
+
+    :host #targets.A0 #b3 {
+      left: 50%;
+    }
+
+    :host #targets.A0 #b2 {
+      left: 60%;
+    }
+
+
+
+    :host #targets #r1{
+      display: none;
+    }
+
+    :host #targets #b1{
+      display: none;
+    }
+
+
+    :host #targets.A180 .b{
+      top: 35%;
+    }
+
+    :host #targets.A180 #b2 {
+      left: 34.5%;
+    }
+
+    :host #targets.A180 #b3 {
+      left: 45%;
+    }
+
+    :host #targets.A180 #b4 {
+      left: 50%;
+    }
+
+    :host #targets.A180 #b5 {
+      left: 58%;
+    }
+
+    :host #targets.A180 .r{
+      top: 60%;
+    }
+
+    :host #targets.A180 #r5 {
+      left: 33%;
+    }
+
+    :host #targets.A180 #r4 {
+       left: 42%;
+     }
+
+    :host #targets.A180 #r3 {
+      left: 51%;
+    }
+
+    :host #targets.A180 #r2 {
       left: 60%;
     }
 
@@ -130,9 +198,9 @@ Example:
     <div id="viewport">
       <div id="view">
         <canvas id="canvas"></canvas>
-        <div id="targets">
+        <div id="targets" class$="{{side}}">
           <template is="dom-repeat" items="{{models}}" as="model">
-            <div id$="[[model.id]]" class$="[[model.color]] [[getSelectedCss(model.selected)]]" on-tap="onSelectModel"></div>
+            <div id$="[[model.id]]" class$="dropzone [[model.color]] [[getSelectedCss(model.selected)]]" on-tap="onSelectModel"></div>
           </template>
         </div>
       </div>
@@ -145,13 +213,11 @@ Example:
       <paper-progress indeterminate="[[indeterminateLoadingState]]"></paper-progress>
     </paper-dialog>
 
-    <template is="dom-if" if="{{!installed}}">
-      <platinum-sw-register id="imageService" state="{{imageServiceState}}">
+    <platinum-sw-register id="imageService" state="{{imageServiceState}}">
 
-        <platinum-sw-cache id="imageCache" precache="[[precacheUrls]]"></platinum-sw-cache>
+      <platinum-sw-cache id="imageCache" precache="[[precacheUrls]]"></platinum-sw-cache>
 
-      </platinum-sw-register>
-    </template>
+    </platinum-sw-register>
 
 
   </template>
@@ -176,6 +242,27 @@ Example:
     },
 
     properties: {
+
+      initialized: {
+        type: Boolean,
+        value: false
+      },
+
+      autoScaled: {
+        type: Boolean,
+        value: false
+      },
+
+      side:{
+        type: String,
+        value: "A0",
+        observer: 'onSideChange'
+      },
+
+      color: {
+        type: String,
+        value: ""
+      },
 
       installed: {
         type: Boolean,
@@ -223,23 +310,9 @@ Example:
           value: null
         },
 
-        firstLayerImages: {
-          type: Object,
-          value: function(){
-            return null;
-          }
-        },
-
-        secondLayerImages: {
-          type: Object,
-          value: function(){
-            return null;
-          }
-        },
-
         scalar: {
           type: Number,
-          value: 2
+          value: 4
         },
 
         precacheUrls: {
@@ -260,6 +333,32 @@ Example:
           return null;
         }
       },
+
+      staticModels: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      selectionModels: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      imageMap: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      currentStep: {
+        type: Number,
+        value: 0
+      }
 
 
 
@@ -301,19 +400,12 @@ Example:
 
     initPrecache: function(){
         if(!this.installed){
-        this.set("loadingState", "indexing images...");
-        this.push("precacheUrls", this.imageUrl+"/" + this.backgroundImage);
+          this.set("loadingState", "indexing images...");
 
 
-        this.firstLayerImages.forEach(function(image){
-          var url = "/layers/base/A0_" + image.c + "_" + image.p + "_base.png";
-          this.push("precacheUrls", this.imageUrl+"/" + url);
-        }, this);
-
-        this.secondLayerImages.forEach(function(image){
-          var url = "/layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
-          this.push("precacheUrls", this.imageUrl+"/" + url);
-        }, this);
+          for (var property in this.imageMap) {
+            this.push("precacheUrls", this.imageUrl+"/layers/items/" + property + ".png");
+          }
 
         this.set("loadingState", "downloading images...");
 
@@ -329,6 +421,10 @@ Example:
       }
 
       return "";
+    },
+
+    onSideChange: function(event){
+      this.paintScene();
     },
 
     onInstalled: function(event){
@@ -353,7 +449,7 @@ Example:
         }else if(state == "unsupported"){
           alert("We're sorry, but your browser doesn't support service workers. Please try the latest version of Chrome.");
         }else{
-          alert("A service worker error occurred");
+          console.log("unknown sw state");
         }
       }
     },
@@ -493,13 +589,65 @@ Example:
       this.dragging = false;
     },
 
+    allianceFilter: function(color){
+      if (!color) {
+        //do not allow selecting until an alliance has been selected
+        return true;
+      } else {
+        // return a filter function for the current search string
+        return function(model) {
+          if(model.color == color){
+            return true;
+          }
+          return false;
+        };
+      }
+    },
+
+    autoScale: function(){
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var targetWidth = 1.146 * sceneWidth;
+      this.set("scalar", 2048 / targetWidth);
+
+      this.autoScaled = true;
+
+      this.paintScene();
+    },
+
+    initialize: function(){
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      //move to bottom
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+
+        this.$.view.style.marginTop = (-1 * maxY + 16) + "px";
+
+
+      }
+
+      //center
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        this.$.view.style.marginLeft = -1 * (maxX / 2) + "px";
+      }
+
+      this.initialized = true;
+      this.fire("initialized");
+      this.paintScene();
+    },
+
     paintScene: function(){
       var context = this.$.canvas.getContext("2d");
 
       this.set("loadingState", "loading field...");
 
       var _bg = new Image();
-      _bg.src = this.imageUrl+"/" + this.backgroundImage;
+      _bg.src = this.imageUrl+ "/layers/items/" + this.backgroundImage;
       _bg.onload = function() {
 
         context.canvas.height = _bg.height / this.scalar;
@@ -513,75 +661,44 @@ Example:
         this.$.view.style.height = (_bg.height / this.scalar) + "px";
         this.$.view.style.width = (_bg.width / this.scalar) + "px";
 
+        if(!this.autoScaled){
+          this.autoScale();
+          return;
+        }
+
+        if(!this.initialized){
+          this.initialize();
+          return;
+        }
+
         context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         context.drawImage(_bg, 0, 0, _bg.width, _bg.height, 0, 0, _bg.width / this.scalar, _bg.height / this.scalar);
 
         this.set("loadingState", "loading bases...");
 
-        var count = this.firstLayerImages.length;
-        this.firstLayerImages.forEach(function (image) {
+        var count = this.staticModels.length;
+        this.staticModels.forEach(function (model) {
 
 
-          var url = "layers/base/A0_" + image.c + "_" + image.p + "_base.png";
+          var fileName = "" +this.side+"_" + model.id+ "_base";
+          var image = this.get("imageMap." + fileName);
 
           var _img = new Image();
 
-          _img.src = this.imageUrl + "/" + url;
+          _img.src = this.imageUrl + "/layers/items/" + fileName + ".png";
           _img.onload = function () {
             count--;
             context.drawImage(_img, 0, 0, _img.width, _img.height, image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
             if(count == 0){
-              this.loadSecondLayerImages();
+              this.loadDynamicImages();
             }
           }.bind(this);
         }.bind(this));
-
-
-        /**
-         this.secondLayerImages.forEach(function(image){
-
-          var url = ""
-
-          var isStatic = false;
-
-          var url = "layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
-
-          if(image.p == 3){
-            if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
-              //continue
-            }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
-              //continue
-            }else{
-              return;
-            }
-          }else if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
-            return;
-          }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
-            return;
-          }
-
-          if(image.n=="e1"){
-            isStatic = true;
-          }
-
-
-          var _img = new Image();
-          _img.src = this.imageUrl+"/" + url;
-          _img.onload = function(){
-            if(!isStatic){
-              context.globalAlpha = .5;
-            }
-            context.drawImage(_img, 0, 0, _img.width , _img.height , image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
-            context.globalAlpha = 1;
-          }.bind(this);
-        }.bind(this));
-         }.bind(this);
-         **/
 
       }.bind(this);
     },
 
-    loadSecondLayerImages: function(){
+    loadDynamicImages: function(){
       var context = this.$.canvas.getContext("2d");
 
       this.set("loadingState", "loading defenses...");
@@ -591,60 +708,72 @@ Example:
           option.items.forEach(function(item){
             if(item.selected){
 
-              var _image = null;
-              this.secondLayerImages.forEach(function(image){
-                if(image.c == model.color && ("p" + image.p) == model.sku && item.sku == image.n){
-                  _image = image;
-                }
-              }, this);
-              var url = "layers/items/A0_" + model.color + "_" + model.sku + "_"+item.sku+".png";
+              var fileName = ""+this.side+"_" + model.color + "_" + model.sku + "_"+item.sku;
+
+              var image = this.get("imageMap." + fileName);
+
               var _img = new Image();
-                _img.src = this.imageUrl+"/" + url;
+                _img.src = this.imageUrl + "/layers/items/" + fileName + ".png";
                 _img.onload = function(){
-                  context.drawImage(_img, 0, 0, _img.width , _img.height , _image.x / this.scalar, _image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
+                  context.drawImage(_img, 0, 0, _img.width , _img.height , image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
                 }.bind(this);
               }
           },this);
         },this);
       },this);
 
-      this.secondLayerImages.forEach(function(image){
+      this.setupDropZone();
+    },
 
-        var url = ""
+    setupDropZone:function(){
+      //Get all dropzones
+      var dropZones = Polymer.dom(this.root).querySelectorAll('.dropzone');
+      var self = this;
+      dropZones.forEach(function(dropzone){
+        interact(dropzone).dropzone({
 
-        var isStatic = false;
+          accept:'.thumbnail',
+          overlap:'pointer',
+          ondragenter:function(ev){
+            self.toggleClass('active', true, ev.target);
+            //console.log('drag enter');
 
-        var url = "layers/items/A0_" + image.c + "_p" + image.p + "_"+image.n+".png";
-        /**
-        if(image.p == 3){
-          if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
-            //continue
-          }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
-            //continue
-          }else{
-            return;
-          }
-        }else if(image.n.indexOf(this.audienceRedCategory) > -1 && image.c == "r"){
-          return;
-        }else if(image.n.indexOf(this.audienceBlueCategory) > -1 && image.c == "b"){
-          return;
-        }else**/ if(image.n=="e1"){
-          isStatic = true;
-        }else{
-          return;
-        }
+          },
+          ondragleave:function(ev){
+            self.toggleClass('active', false, ev.target);
+
+          },
+          ondrop:function(ev){
+            var card = ev.relatedTarget;
+            var dropzone = ev.target;
+            var modelId = Polymer.dom(dropzone).node.id;
+            var itemSku = Polymer.dom(card).node.sku;
 
 
-        var _img = new Image();
-        _img.src = this.imageUrl+"/" + url;
-        _img.onload = function(){
-          if(!isStatic){
-            context.globalAlpha = .5;
-          }
-          context.drawImage(_img, 0, 0, _img.width , _img.height , image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
-          context.globalAlpha = 1;
-        }.bind(this);
-      }.bind(this));
+            for(var i = 0; i < this.models.length; i++) {
+              var model = this.models[i];
+              if (model.id == modelId) {
+                for (var x = 0; x < model.options.length; x++) {
+                  var option = model.options[x];
+                  for (var y = 0; y < option.items.length; y++) {
+                    var item = option.items[y];
+                    if (item.sku == itemSku) {
+                      this.set("models." + i + ".options." + x + ".items." + y + ".selected", true);
+                    } else {
+                      this.set("models." + i + ".options." + x + ".items." + y + ".selected", false);
+                    }
+                  }
+                }
+              }
+            }
+
+            //Polymer.dom(card).node.set("hidden",true);
+            this.paintScene();
+          }.bind(this)
+
+        }, this);
+      }, this);
+
     }
 
   });

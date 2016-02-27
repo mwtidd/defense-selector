@@ -29,10 +29,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
 <link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icons/image-icons.html">
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 
 <link rel="import" href="../platinum-sw/platinum-sw-register.html">
 <link rel="import" href="../platinum-sw/platinum-sw-cache.html">
+
+<link rel="import" href="../neon-animation/neon-animated-pages.html">
+<link rel="import" href="../neon-animation/neon-animatable.html">
+<link rel="import" href="../neon-animation/neon-animations.html">
 
 <!--
 An element to start from.
@@ -84,7 +89,7 @@ Example:
     }
 
     :host ::content #main #scrim{
-      display: none;
+      /*display: none;*/
     }
 
     :host ::content #targets{
@@ -136,8 +141,6 @@ Example:
       position: absolute;
       top: 8px;
       left: 8px;
-      background: rgba(255,255,255,.5);
-      border-radius: 50%;
     }
 
     :host #downloadImages{
@@ -148,70 +151,101 @@ Example:
       border-radius: 50%;
     }
 
-    :host #zoomIn{
+    :host #allianceSelector{
       position: absolute;
       right: 8px;
-      bottom: 56px;
-      background: rgba(255,255,255,.5);
-      border-radius: 50%;
+      top: 8px;
+      background: rgba(255,255,255,.9);
+
     }
+
+    :host #allianceSelector .card-content{
+      @apply(--layout-vertical);
+    }
+
+    :host ::content #allianceSelector paper-input-container{
+
+    }
+
+    :host paper-icon-button{
+      background: rgba(255,255,255,.9);
+      border-radius: 50%;
+      color: rgb(0,0,0);
+    }
+
+    :host #zoomIn{
+       position: absolute;
+       right: 8px;
+       top: 8px;
+     }
 
     :host #zoomOut{
       position: absolute;
       right: 8px;
-      bottom: 8px;
-      background: rgba(255,255,255,.5);
-      border-radius: 50%;
+      top: 56px;
+
+    }
+
+    :host #prevAngle{
+      position: absolute;
+      left: 8px;
+      bottom: calc(50% - 20px);
+    }
+
+    :host #nextAngle{
+      position: absolute;
+      right: 8px;
+      bottom: calc(50% - 20px);
     }
 
     :host #refresh{
       position: absolute;
       right: 8px;
       top: 8px;
-      background: rgba(255,255,255,.5);
-      border-radius: 50%;
-    }
-
-    :host paper-dropdown-menu{
-      width: calc(100% - 32px);
-      padding: 8px 16px;
     }
 
     :host ::content #selector{
       position: absolute;
       width: 100%;
-      height: 100%;
-      overflow: hidden;
-      @apply(--layout-vertical);
+      height: 25%;
+      /*overflow: hidden;*/
+      bottom: 0;
+      left: 0;
+      @apply(--layout-horizontal);
+      @apply(--layout-center-center);
+      background-color: rgba(255,255,255, .7);
     }
 
-    :host ::content #selector > div{
-      @apply(--layout-flex);
-      @apply(--layout-vertical);
-    }
-
-    :host ::content #selector paper-card{
-      @apply(--layout-flex);
-      @apply(--layout-vertical);
-      max-height: 25%;
-    }
-
-    :host ::content #selector paper-card .card-content{
+    :host ::content #selector neon-animated-pages{
       @apply(--layout-flex);
       @apply(--layout-horizontal);
+      height: 100%;
     }
 
-    :host ::content #selector paper-card .card-content .thumbnail{
+    :host ::content #selector neon-animatable{
+      @apply(--layout-flex);
+      @apply(--layout-horizontal);
+      @apply(--layout-center-center);
+    }
+
+    :host ::content #selector neon-animatable .option{
+      @apply(--layout-flex);
+      @apply(--layout-horizontal);
+      height: 100%;
+      max-width: calc( (100% - 80px) /3);
+    }
+
+    :host ::content #selector .option .thumbnail{
       @apply(--layout-flex);
       margin: 8px;
-      max-width: calc(50% - 16px);
+      background-color: rgba(255,255,255,.9);
     }
 
-    :host ::content .header.paper-card .title-text.paper-card{
-      padding: 8px;
+    :host ::content #selector .option .thumbnail.disabled{
+      opacity: 0;
     }
 
-    :host ::content paper-card .card-content{
+    :host ::content .option .card-content{
       padding: 8px;
     }
 
@@ -543,87 +577,97 @@ Example:
 
     <paper-drawer-panel id="drawer" responsive-width="20000px" disable-swipe>
       <paper-header-panel drawer>
-        <paper-toolbar><span class="title">Defenses</span><paper-icon-button icon="close" paper-drawer-toggle></paper-icon-button></paper-toolbar>
-        <!--
-        <paper-dropdown-menu label="Select a Model">
-          <paper-listbox class="dropdown-content" selected="{{selectedModel}}" attr-for-selected="value" selected-attribute="active">
+        <paper-toolbar><span class="title">Defense Selector</span><paper-icon-button icon="close" paper-drawer-toggle></paper-icon-button></paper-toolbar>
+        <paper-card  id="allianceSelector">
+          <div class="card-content">
+            <paper-dropdown-menu label="Alliance Color">
+              <paper-listbox class="dropdown-content" selected="{{color}}" attr-for-selected="value" selected-attribute="active">
+                <paper-item value="r">Red</paper-item>
+                <paper-item value="b">Blue</paper-item>
+              </paper-listbox>
+            </paper-dropdown-menu>
+            <paper-dropdown-menu label="Audience Group">
+              <paper-listbox class="dropdown-content" selected="{{audienceGroup}}" attr-for-selected="value" selected-attribute="active">
+                <paper-item value="a">A</paper-item>
+                <paper-item value="b">B</paper-item>
+                <paper-item value="c">C</paper-item>
+                <paper-item value="d">D</paper-item>
+              </paper-listbox>
+            </paper-dropdown-menu>
+            <paper-dropdown-menu label="Field Side">
+              <paper-listbox class="dropdown-content" selected="{{side}}" attr-for-selected="value" selected-attribute="active">
+                <paper-item value="A0">0</paper-item>
+                <paper-item value="A45">45</paper-item>
+                <paper-item value="A90">90</paper-item>
+                <paper-item value="A135">135</paper-item>
+                <paper-item value="A180">180</paper-item>
+                <paper-item value="A225">225</paper-item>
+                <paper-item value="A270">270</paper-item>
+                <paper-item value="A315">315</paper-item>
+                <paper-item value="T">Top View</paper-item>
+              </paper-listbox>
+            </paper-dropdown-menu>
+          </div>
+        </paper-card>
+      </paper-header-panel>
+      <div main>
+        <div id="scene">
+
+          <defense-canvas id="canvas" side="{{side}}" color="{{color}}" installed="{{installed}}" image-map="{{imageMap}}" models="{{models}}" current-step="{{currentStep}}" selection-models="{{selectionModels}}" static-models="{{staticModels}}" image-url="{{imageUrl}}" background-image="{{side}}.png"></defense-canvas>
+
+          <paper-icon-button id="nextAngle" icon="image:rotate-left" on-tap="onNextAngle"></paper-icon-button>
+          <paper-icon-button id="prevAngle" icon="image:rotate-right" on-tap="onPreviousAngle"></paper-icon-button>
+          <paper-icon-button id="zoomIn" icon="add" on-tap="zoomIn"></paper-icon-button>
+          <paper-icon-button id="zoomOut" icon="remove" on-tap="zoomOut"></paper-icon-button>
+          <paper-icon-button id="menuButton" icon="menu" paper-drawer-toggle></paper-icon-button>
+
+
+
+          <!--
+          <paper-icon-button id="refresh" icon="refresh" on-tap="refresh" hidden></paper-icon-button>
+          -->
+
+          <div id="selector">
+            <paper-icon-button icon="arrow-back" on-tap="previousStep"></paper-icon-button>
+            <neon-animated-pages selected="{{currentStep}}" entry-animation="slide-from-bottom-animation" exit-animation="slide-down-animation">
+              <template is="dom-repeat" items="{{selectionModels}}" as="model">
+                <neon-animatable>
+                  <template is="dom-repeat" items="{{model.options}}" as="option">
+                    <div class="option" hidden$="{{option.hidden}}">
+                      <template is="dom-repeat" items="{{option.items}}">
+                        <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
+                                        class$="thumbnail {{selectedCss(item.selected)}}" style$="{{getThumbCss(item.name)}}"
+                                        layer$="{{selectedModel.sku}}" item$="{{item.name}}">
+                          <span class="label">{{item.name}}</span>
+                        </paper-material>
+                      </template>
+                    </div>
+                  </template>
+                </neon-animatable>
+              </template>
+            </neon-animated-pages>
+
+            <paper-icon-button icon="arrow-forward" on-tap="nextStep"></paper-icon-button>
+          </div>
+
+          <!--
+          <div id="selector">
             <template is="dom-repeat" items="{{models}}" as="model">
-              <paper-item value="{{model}}" hidden="{{!isSelectable(model.static,model.restricted)}}">{{model.name}}</paper-item>
-            </template>
-          </paper-listbox>
-        </paper-dropdown-menu>
-        -->
-        <div id="selector">
-          <paper-dropdown-menu label="Select a Team" hidden>
-            <paper-listbox class="dropdown-content" selected="{{color}}" attr-for-selected="value" selected-attribute="active">
-              <paper-item value="red">Red</paper-item>
-              <paper-item value="blue">Blue</paper-item>
-            </paper-listbox>
-          </paper-dropdown-menu>
-          <template is="dom-repeat" items="{{models}}" as="model">
-            <div hidden$="{{!model.selected}}">
-              <template is="dom-repeat" items="{{model.options}}" as="option">
-                <paper-card heading="[[option.name]]" elevation="0" class$="[[getOptionClass(option)]]">
-                  <div class="card-content">
+              <div hidden$="{{!model.selected}}">
+                <template is="dom-repeat" items="{{model.options}}" as="option">
+                  <div class="option">
                     <template is="dom-repeat" items="{{option.items}}">
-                      <paper-material model$="{{model.id}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
+                      <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
                                       class$="thumbnail {{selectedCss(item.name,selectedModel.selectedItem)}}" style$="{{getThumbCss(item.name)}}"
                                       layer$="{{selectedModel.sku}}" item$="{{item.name}}" on-tap="selectItem">
                         <span class="label">{{item.name}}</span>
                       </paper-material>
                     </template>
                   </div>
-                </paper-card>
-              </template>
-            </div>
-          </template>
-        </div>
-      </paper-header-panel>
-      <div main>
-        <div id="scene">
-
-          <defense-canvas id="canvas" installed="{{installed}}" models="{{models}}" image-url="{{imageUrl}}" background-image="{{backgroundImage}}" first-layer-images="{{firstLayerImages}}" second-layer-images="{{secondLayerImages}}"></defense-canvas>
-
-
-          <!--
-          <div id="vignette" >
-            <content select=".vignette-layer"></content>
-            <div class="vignette-layer">
-              <div id="markers">
-                <template is="dom-repeat" items="{{models}}" as="model">
-                  <div class$="target [[model.sku]] {{selectedCss(model.name,selectedModel.name)}}" hidden="{{!isSelectable(model.static,model.restricted)}}"></div>
                 </template>
               </div>
-
-            </div>
-            <template is="dom-repeat" items="{{models}}" as="model">
-              <template is="dom-if" if="{{isSelectable(model.static,model.restricted)}}">
-                <template is="dom-repeat" items="{{model.options}}" as="option">
-                  <template is="dom-repeat" items="{{option.items}}">
-                    <div layer$="[[model.name]]" class$="vignette-layer {{model.sku}}" hidden="{{!item.selected}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[item.name]].png');"></div>
-                  </template>
-                </template>
-              </template>
-              <div layer$="[[model.name]]" class$="disabled vignette-layer {{model.sku}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[model.options.0.items.0.name]].png');" hidden="{{!model.static}}"></div>
-              <div layer$="[[model.name]]" class$="disabled vignette-layer {{model.sku}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[model.options.0.items.0.name]].png');" hidden="{{!model.restricted}}"></div>
-              <div layer$="[[model.name]]" class$="disabled vignette-layer {{model.sku}}" style$="background-image:url('http://[[imageUrl]]/layers/[[model.sku]]/[[model.options.0.items.1.name]].png');" hidden="{{!model.restricted}}"></div>
-
             </template>
-            <div id="targets">
-              <template is="dom-repeat" items="{{models}}" as="model">
-                <div class$="target [[model.sku]]" model$="[[model.sku]]" on-tap="openModel" hidden="{{!isSelectable(model.static,model.restricted)}}"></div>
-              </template>
-            </div>
           </div>
-          -->
-          <!--
-          <paper-icon-button id="downloadImages" icon="cloud-download" on-tap="downloadImages"></paper-icon-button>
-          -->
-          <paper-icon-button id="zoomIn" icon="add" on-tap="zoomIn"></paper-icon-button>
-          <paper-icon-button id="zoomOut" icon="remove" on-tap="zoomOut"></paper-icon-button>
-          <paper-icon-button id="menuButton" icon="menu" paper-drawer-toggle hidden></paper-icon-button>
-          <!--
-          <paper-icon-button id="refresh" icon="refresh" on-tap="refresh" hidden></paper-icon-button>
           -->
         </div>
 
@@ -660,14 +704,31 @@ Example:
       //'targets.track' : 'vignetteDrag',
       //'selector.tap': 'selectorTap',
       //"iron-resize" : "onResize"
-      "canvas.model-selected": "onModelSelect"
+      "canvas.model-selected": "onModelSelect",
+      "canvas.initialized": "onCanvasInitialized"
     },
 
     properties: {
 
+      currentStep: {
+        type: Number,
+        value: null,
+        observer: 'onStepChange'
+      },
+
+      color: {
+        type: String,
+        value: "b"
+      },
+
       installed: {
         type: Boolean,
         value: false
+      },
+
+      side:{
+        type: String,
+        value: "A0"
       },
 
       precacheUrls: {
@@ -683,6 +744,27 @@ Example:
       },
 
       models: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      staticModels: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      selectionModels: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      imageMap: {
         type: Object,
         value: function(){
           return null;
@@ -718,6 +800,8 @@ Example:
         value: null
       },
 
+      /**
+
       //dragging: false,
       startX: 0,
       startY: 0,
@@ -725,25 +809,17 @@ Example:
       startTop: 0,
       vignetteWidth: 600,
       sceneWidth: 600,
+       **/
 
       backgroundImage: {
         type: String,
         value: null
       },
 
-      firstLayerImages: {
-        type: Object,
-        value: function(){
-          return null;
-        }
-      },
-
-      secondLayerImages: {
-        type: Object,
-        value: function(){
-          return null;
-        }
-      },
+      audienceGroup: {
+        type: String,
+        value: "a"
+      }
 
     },
 
@@ -757,7 +833,7 @@ Example:
       // This is the point where you should make modifications to the DOM (when
       // necessary), or kick off any processes the element wants to perform.
 
-
+      this.setupCardDragging();
 
 
     },
@@ -796,6 +872,73 @@ Example:
 
     // Element Behavior
 
+    onCanvasInitialized: function(){
+      this.set("currentStep", 0);
+    },
+
+    onStepChange: function(step){
+
+      if(this.selectionModels){
+        if(step == 0){
+          //hide audience group
+
+          var model = this.selectionModels[step];
+          for(var x = 0; x < model.options.length; x++){
+            var option = model.options[x];
+            if(option.sku == this.audienceGroup){
+              this.set("selectionModels." + step + ".options." + x + ".hidden", true);
+            }else{
+              this.set("selectionModels." + step + ".options." + x + ".hidden", false);
+            }
+          }
+        }else if(step == 1){
+          //only show audience group
+
+          var model = this.selectionModels[step];
+          for(var x = 0; x < model.options.length; x++){
+            var option = model.options[x];
+            if(option.sku != this.audienceGroup){
+              this.set("selectionModels." + step + ".options." + x + ".hidden", true);
+            }else{
+              this.set("selectionModels." + step + ".options." + x + ".hidden", false);
+            }
+          }
+        }else if(step == 2){
+          //show all
+        }
+      }
+
+
+      if(this.$.canvas.initialized){
+        if(this.color == "b"){
+          if(step == 0 || step == 1){
+            this.set("side", "A0");
+            this.$.canvas.initialize();
+          }else if(step == 2){
+            this.set("side", "A180");
+            this.$.canvas.initialize();
+          }
+        }else{
+          if(step == 0 || step == 1){
+            this.set("side", "A180");
+            this.$.canvas.initialize();
+          }else if(step == 2){
+            this.set("side", "A0");
+            this.$.canvas.initialize();
+          }
+        }
+
+      }
+    },
+
+    previousStep: function(){
+      this.set("currentStep", this.currentStep - 1);
+    },
+
+    nextStep: function(){
+      this.set("currentStep", this.currentStep + 1);
+    },
+
     /**
      * Go to next slide
      */
@@ -815,6 +958,11 @@ Example:
     },
 
     selectItem: function(event){
+      if(true){
+        return;
+      }
+
+
       var modelId = Polymer.dom(event).rootTarget.getAttribute("model");
       for(var i = 0; i < this.models.length; i++){
         var model = this.models[i];
@@ -838,23 +986,6 @@ Example:
       this.$.canvas.paintScene();
     },
 
-    selectorTap: function(event){
-
-      var selectedLayer = Polymer.dom(event).rootTarget.getAttribute("layer");
-      var selectedItem = Polymer.dom(event).rootTarget.getAttribute("item");
-      this.set("selectedModel.selectedItem",selectedItem);
-
-      var vignetteLayer = document.querySelector(".vignette-layer."+selectedLayer);
-
-      vignetteLayer.style.opacity = 0;
-      setTimeout(function(){
-        vignetteLayer.style.backgroundImage = "url('../demo/layers/"+selectedLayer+"/"+selectedItem+".png')";
-        vignetteLayer.style.opacity = 1;
-      },250);
-
-
-    },
-
     vignetteDrag: function(event){
       if(event.detail.state == "start"){
         this.startDrag(event);
@@ -866,8 +997,6 @@ Example:
     },
 
     startDrag: function(event){
-      //this.sceneWidth = $(".scene").outerWidth();
-      //this.vignetteWidth = $(".scene .image").outerWidth();
 
       this.dragging = true;
 
@@ -877,19 +1006,6 @@ Example:
       this.startLeft = this.$.vignette.style.marginLeft.replace("px", "");
       this.startTop = this.$.vignette.style.marginTop.replace("px", "");
 
-      /**
-      this.startX = Math.ceil(event.pageX);
-      this.startY = Math.ceil(event.pageY);
-
-      if(!this.startX && !this.startY){
-        this.startX = event.originalEvent.touches[0].pageX;
-        this.startY = event.originalEvent.touches[0].pageY;
-      }
-       **/
-
-      //this.startLeft = $(".scene > .image").css("margin-left").replace("px", "");
-      //this.startTop = $(".scene > .image").css("margin-top").replace("px", "");
-      //this.dragging = true;
     },
 
 
@@ -968,100 +1084,35 @@ Example:
         this.dragging = false;
       },
 
+    onNextAngle: function(){
+      var angle = parseInt(this.side.replace("A",""));
+      angle +=45;
+      if(angle >= 360){
+        angle = 0;
+      }
+      this.set("side", "A" + angle);
+    },
+
+    onPreviousAngle: function(){
+      var angle = parseInt(this.side.replace("A",""));
+      angle -= 45;
+      if(angle < 0){
+        angle = 360 - 45;
+      }
+      this.set("side", "A" + angle);
+    },
+
     zoomIn: function(){
       if(this.$.canvas.scalar > 1){
         this.$.canvas.set("scalar", this.$.canvas.scalar - .25);
         this.$.canvas.paintScene();
       }
-
-      /**
-      var sceneWidth = this.$.scene.offsetWidth;
-      var sceneHeight = this.$.scene.offsetHeight
-
-      var vignetteWidth = this.$.vignette.offsetWidth;
-      var vignetteHeight = this.$.vignette.offsetHeight;
-
-      var marginLeft = 0;
-      if(this.$.vignette.style.marginLeft){
-        marginLeft = this.$.vignette.style.marginLeft.replace("px","");
-      }
-
-      var marginTop = 0;
-      if(this.$.vignette.style.marginTop) {
-        marginTop = this.$.vignette.style.marginTop.replace("px", "");
-      }
-
-      var leftMarginPercentage = marginLeft / vignetteWidth;
-      var topMarginPercentage = marginTop / vignetteHeight;
-
-      vignetteWidth *= 1.25;
-      vignetteHeight *= 1.25;
-      leftMarginPercentage *= 1.25;
-      topMarginPercentage *= 1.25;
-
-      marginLeft = parseInt(vignetteWidth * leftMarginPercentage);
-      marginTop = parseInt(vignetteHeight * topMarginPercentage);
-      //calculate margin as a percentage
-
-      this.$.vignette.style.marginLeft = marginLeft + "px";
-      this.$.vignette.style.marginTop = marginTop + "px";
-      this.$.vignette.style.width = vignetteWidth + "px";
-      this.$.vignette.style.height = vignetteHeight + "px";
-      **/
     },
 
     zoomOut: function(){
       this.$.canvas.set("scalar", this.$.canvas.scalar + .25);
       this.$.canvas.paintScene();
-      /**
-      var sceneWidth = this.$.scene.offsetWidth;
-      var sceneHeight = this.$.scene.offsetHeight
 
-      var vignetteWidth = this.$.vignette.offsetWidth;
-      var vignetteHeight = this.$.vignette.offsetHeight;
-
-      if(vignetteWidth/1.25 < sceneWidth || vignetteHeight/1.25 < sceneHeight){
-        return;
-      }
-
-      var marginLeft = 0;
-      if(this.$.vignette.style.marginLeft){
-        marginLeft = this.$.vignette.style.marginLeft.replace("px","");
-      }
-
-      var marginTop = 0;
-      if(this.$.vignette.style.marginTop) {
-        marginTop = this.$.vignette.style.marginTop.replace("px", "");
-      }
-
-      var leftMarginPercentage = marginLeft / vignetteWidth;
-      var topMarginPercentage = marginTop / vignetteHeight;
-
-      vignetteWidth /= 1.25;
-      vignetteHeight /= 1.25;
-      leftMarginPercentage /= 1.25;
-      topMarginPercentage /= 1.25;
-
-      marginLeft = vignetteWidth * leftMarginPercentage;
-      marginTop = vignetteHeight * topMarginPercentage;
-
-      if(vignetteWidth - sceneWidth < -1 * marginLeft){
-        marginLeft = vignetteWidth - sceneWidth;
-        marginLeft *= -.5;
-      }
-
-      if(vignetteHeight - sceneHeight < -1 * marginTop){
-        marginTop = vignetteHeight - sceneHeight;
-        marginTop *= -.5;
-      }
-
-      //calculate the minimum margin left
-
-      this.$.vignette.style.marginLeft = marginLeft + "px";
-      this.$.vignette.style.marginTop = marginTop + "px";
-      this.$.vignette.style.width = vignetteWidth + "px";
-      this.$.vignette.style.height = vignetteHeight + "px";
-       **/
     },
 
     getThumbCss: function(item){
@@ -1075,11 +1126,10 @@ Example:
           this.set("selectedModel", model);
         }
       }, this);
-      this.$.drawer.openDrawer();
     },
 
-    selectedCss: function(modelName, selectedModel){
-      if(modelName.toLowerCase() == selectedModel.toLowerCase()){
+    selectedCss: function(isSelected){
+      if(isSelected){
         return "selected";
       }
       return "";
@@ -1112,25 +1162,14 @@ Example:
           this.set("models." + i + ".selected",false);
         }
       }
-      this.$.drawer.openDrawer();
+      //this.$.drawer.openDrawer();
     },
 
     initPrecache: function(){
 
-      //this.$.canvas.initPrecache();
+      this.$.canvas.initPrecache();
       this.$.canvas.set("loaded",true);
       this.$.canvas.paintScene();
-
-      /**
-      this.models.forEach(function(model){
-        var _model = model;
-        model.options.forEach(function(option){
-          option.items.forEach(function(item){
-            this.push("precacheUrls", "http://"+this.imageUrl+"/layers/"+_model.name+"/"+item+".png");
-          }, this);
-        }, this);
-      }, this);
-       **/
     },
 
     getOptionClass: function(option){
@@ -1143,6 +1182,51 @@ Example:
 
     isSelectable: function(isStatic, isRestricted){
       return !isStatic && !isRestricted;
+    },
+
+    setupCardDragging:function(){
+
+      //From the interact docs
+      function dragMoveListener (event) {
+        var target = event.target,
+        // keep the dragged position in the data-x/data-y attributes
+                x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+                y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+        // translate the element
+        target.style.webkitTransform =
+                target.style.transform =
+                        'translate(' + x + 'px, ' + y + 'px)';
+
+        // update the posiion attributes
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      }
+
+      function dragEndListener (event){
+        if(!event.dropzone){
+          var target = event.target;
+
+          // translate the element
+          target.style.webkitTransform =
+                  target.style.transform =
+                          'translate(0px, 0px)';
+
+          target.setAttribute('data-x', 0);
+          target.setAttribute('data-y', 0);
+        }
+      }
+
+
+
+      interact(".thumbnail",{
+        //context:this.$$(".someContainer")
+      })
+              .draggable({
+                inertia: true,
+                onmove: dragMoveListener,
+                onend: dragEndListener
+              })
     },
 
     onRulesChange: function(data) {
