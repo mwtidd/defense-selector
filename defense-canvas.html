@@ -206,7 +206,7 @@ Example:
   <template>
     <content></content>
     <div id="viewport">
-      <div id="view" class="draggable">
+      <div id="view">
         <canvas id="canvas"></canvas>
         <div id="targets" class$="{{side}}">
           <template is="dom-repeat" items="{{models}}" as="model">
@@ -421,7 +421,7 @@ Example:
 
 
 
-      interact(".draggable",{
+      interact("#view",{
         //context:this.$$(".someContainer")
       })
               .draggable({
@@ -672,6 +672,42 @@ Example:
       setTimeout(function(){
         this.toggleClass("scroll", false, this.$.view);
       }.bind(this), 500)
+    },
+
+    goToCenter: function(){
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      var x = 0;
+      var y = 0;
+
+      //center
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        //this.$.view.style.marginLeft = -1 * (maxX / 2) + "px";
+        x= -1 * (maxX / 2);
+      }
+
+      //move to bottom
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+
+        //this.$.view.style.marginTop = (-1 * maxY + 16) + "px";
+        y = (-1 * (maxY / 2));
+
+      }
+
+
+      this.$.view.style.webkitTransform =
+              this.$.view.style.transform =
+                      'translate(' + x + 'px, ' + y + 'px)';
+
+      // update the position attributes
+      this.$.view.setAttribute('data-x', x);
+      this.$.view.setAttribute('data-y', y);
     },
 
     scrollToCenter: function(){

@@ -1302,12 +1302,14 @@ Example:
     zoomIn: function(){
       if(this.$.canvas.scalar > 1){
         this.$.canvas.set("scalar", this.$.canvas.scalar - .25);
+        //this.$.canvas.goToCenter();
         this.$.canvas.paintScene();
       }
     },
 
     zoomOut: function(){
       this.$.canvas.set("scalar", this.$.canvas.scalar + .25);
+      //this.$.canvas.goToCenter();
       this.$.canvas.paintScene();
 
     },

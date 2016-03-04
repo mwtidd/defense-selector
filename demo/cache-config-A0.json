@@ -1,6 +1,6 @@
 {
   "cacheId": "defense-selector-a0",
-  "defaultCacheStrategy": "networkFirst",
+  "defaultCacheStrategy": "cacheFirst",
   "disabled": false,
   "precache": [],
   "precacheFingerprint": "DUMMY_HASH"
