@@ -40,7 +40,8 @@
     "font-roboto-local": "PolymerElements/font-roboto-local#^1.0.1",
     "platinum-sw": "PolymerElements/platinum-sw#^1.2.3",
     "paper-progress": "PolymerElements/paper-progress#^1.0.8",
-    "interact": "^1.2.6"
+    "interact": "^1.2.6",
+    "paper-toast": "PolymerElements/paper-toast#^1.2.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",

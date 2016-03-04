@@ -1,0 +1,7 @@
+{
+  "cacheId": "defense-selector-a45",
+  "defaultCacheStrategy": "networkFirst",
+  "disabled": false,
+  "precache": [],
+  "precacheFingerprint": "DUMMY_HASH"
+}

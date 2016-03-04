@@ -26,7 +26,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../paper-card/paper-card.html">
-
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
 
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../iron-icons/image-icons.html">
@@ -170,7 +171,6 @@ Example:
     :host paper-icon-button{
       background: rgba(255,255,255,.9);
       border-radius: 50%;
-      color: rgb(0,0,0);
     }
 
     :host #zoomIn{
@@ -207,13 +207,12 @@ Example:
     :host ::content #selector{
       position: absolute;
       width: 100%;
-      height: 25%;
+      height: 30%;
       /*overflow: hidden;*/
       bottom: 0;
       left: 0;
       @apply(--layout-horizontal);
       @apply(--layout-center-center);
-      background-color: rgba(255,255,255, .7);
     }
 
     :host ::content #selector neon-animated-pages{
@@ -232,22 +231,28 @@ Example:
       @apply(--layout-flex);
       @apply(--layout-horizontal);
       height: 100%;
-      max-width: calc( (100% - 80px) /3);
+      /*max-width: calc( (100% - 80px) /3);*/
     }
 
-    :host ::content #selector .option .thumbnail{
+    :host ::content .option .thumbnail{
       @apply(--layout-flex);
       margin: 8px;
       background-color: rgba(255,255,255,.9);
     }
 
-    :host ::content #selector .option .thumbnail.disabled{
+    :host ::content .option .thumbnail.disabled{
       opacity: .5;
+      cursor: default;
     }
 
-    :host ::content #selector .option .thumbnail.selected{
+    :host ::content .option .thumbnail.selected{
       opacity: 0;
     }
+
+    :host ::content #modal .option .thumbnail.selected{
+      opacity: 1;
+    }
+
 
     :host ::content .option .card-content{
       padding: 8px;
@@ -276,7 +281,7 @@ Example:
     }
 
     :host ::content .thumbnail:hover{
-      background-color: rgba(255,255,255,.2);
+
     }
 
     :host ::content .thumbnail.selected{
@@ -573,6 +578,48 @@ Example:
       margin-left: 0px;
     }
 
+    paper-dialog{
+      width: 300px;
+      height: 265px;
+    }
+
+    paper-dialog > div{
+      width: calc(100% - 48px);
+      height: calc(100% - 48px);
+      overflow: hidden;
+    }
+
+    paper-dialog neon-animated-pages, paper-dialog neon-animatable{
+      width: 100%;
+      height: 100%;
+    }
+    paper-dialog paper-button{
+      margin-top: 8px;
+      background-color: var(--paper-indigo-500);
+      color: white;
+      --paper-button-raised-keyboard-focus: {
+        background-color: var(--paper-pink-a200) !important;
+        color: white !important;
+      };
+    }
+
+    paper-dialog .option{
+      height: 100%;
+      @apply(--layout-vertical);
+    }
+    paper-dialog .option .items{
+      @apply(--layout-flex);
+      @apply(--layout-horizontal);
+    }
+
+
+    paper-dialog .thumbnail{
+      @apply(--layout-flex);
+    }
+
+    :host ::content paper-material.question{
+      @apply(--layout-vertical);
+    }
 
 
   </style>
@@ -584,20 +631,6 @@ Example:
         <paper-toolbar><span class="title">Defense Selector</span><paper-icon-button icon="close" paper-drawer-toggle></paper-icon-button></paper-toolbar>
         <paper-card  id="allianceSelector">
           <div class="card-content">
-            <paper-dropdown-menu label="Alliance Color">
-              <paper-listbox class="dropdown-content" selected="{{color}}" attr-for-selected="value" selected-attribute="active">
-                <paper-item value="r">Red</paper-item>
-                <paper-item value="b">Blue</paper-item>
-              </paper-listbox>
-            </paper-dropdown-menu>
-            <paper-dropdown-menu label="Audience Group">
-              <paper-listbox class="dropdown-content" selected="{{audienceGroup}}" attr-for-selected="value" selected-attribute="active">
-                <paper-item value="a">A</paper-item>
-                <paper-item value="b">B</paper-item>
-                <paper-item value="c">C</paper-item>
-                <paper-item value="d">D</paper-item>
-              </paper-listbox>
-            </paper-dropdown-menu>
             <paper-dropdown-menu label="Field Side">
               <paper-listbox class="dropdown-content" selected="{{side}}" attr-for-selected="value" selected-attribute="active">
                 <paper-item value="A0">0</paper-item>
@@ -617,13 +650,15 @@ Example:
       <div main>
         <div id="scene">
 
-          <defense-canvas id="canvas" side="{{side}}" color="{{color}}" installed="{{installed}}" image-map="{{imageMap}}" models="{{models}}" current-step="{{currentStep}}" selection-models="{{selectionModels}}" static-models="{{staticModels}}" image-url="{{imageUrl}}" background-image="{{side}}.png"></defense-canvas>
+          <defense-canvas id="canvas" side="{{side}}" color="{{color}}" installed="{{installed}}" angle="A0"
+                          image-map="{{imageMap}}" models="{{models}}" current-step="[[currentStep]]"
+                          selection-models="{{selectionModels}}" static-models="{{staticModels}}" image-url="{{imageUrl}}"></defense-canvas>
 
-          <paper-icon-button id="nextAngle" icon="image:rotate-left" on-tap="onNextAngle"></paper-icon-button>
-          <paper-icon-button id="prevAngle" icon="image:rotate-right" on-tap="onPreviousAngle"></paper-icon-button>
-          <paper-icon-button id="zoomIn" icon="add" on-tap="zoomIn"></paper-icon-button>
-          <paper-icon-button id="zoomOut" icon="remove" on-tap="zoomOut"></paper-icon-button>
-          <paper-icon-button id="menuButton" icon="menu" paper-drawer-toggle></paper-icon-button>
+          <paper-icon-button id="nextAngle" icon="image:rotate-left" on-tap="onNextAngle" hidden$="{{!showControls(currentStep)}}"></paper-icon-button>
+          <paper-icon-button id="prevAngle" icon="image:rotate-right" on-tap="onPreviousAngle" hidden$="{{!showControls(currentStep)}}"></paper-icon-button>
+          <paper-icon-button id="zoomIn" icon="add" on-tap="zoomIn" hidden$="{{!showZoom(currentStep)}}"></paper-icon-button>
+          <paper-icon-button id="zoomOut" icon="remove" on-tap="zoomOut" hidden$="{{!showZoom(currentStep)}}"></paper-icon-button>
+          <paper-icon-button id="menuButton" icon="menu" paper-drawer-toggle hidden></paper-icon-button>
 
 
 
@@ -631,65 +666,104 @@ Example:
           <paper-icon-button id="refresh" icon="refresh" on-tap="refresh" hidden></paper-icon-button>
           -->
 
-          <div id="selector">
-            <paper-icon-button icon="arrow-back" on-tap="previousStep"></paper-icon-button>
-            <neon-animated-pages selected="{{currentStep}}" entry-animation="slide-from-bottom-animation" exit-animation="slide-down-animation">
+          <div id="selector" hidden$="{{!showSelector(currentStep)}}">
+            <paper-icon-button icon="arrow-back" on-tap="previousStep" disabled$="{{!showPrevious(currentStep)}}"></paper-icon-button>
+            <neon-animated-pages selected="[[currentStep]]" entry-animation="slide-from-bottom-animation" exit-animation="slide-down-animation">
               <template is="dom-repeat" items="{{selectionModels}}" as="model">
                 <neon-animatable>
                   <template is="dom-repeat" items="{{model.options}}" as="option">
                     <div class="option" hidden$="{{option.hidden}}">
                       <template is="dom-repeat" items="{{option.items}}">
                         <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
-                                        class$="thumbnail {{selectedCss(item.selected)}}" style$="{{getThumbCss(item.name)}}"
+                                        class$="thumbnail draggable {{selectedCss(item.selected)}} {{disabledCss(item.disabled)}}" style$="{{getThumbCss(item.name)}}"
                                         layer$="{{selectedModel.sku}}" item$="{{item.name}}">
                           <span class="label">{{item.name}}</span>
                         </paper-material>
+
                       </template>
                     </div>
                   </template>
                 </neon-animatable>
               </template>
+              <neon-animatable></neon-animatable>
             </neon-animated-pages>
 
-            <paper-icon-button icon="arrow-forward" on-tap="nextStep"></paper-icon-button>
+            <paper-icon-button icon="arrow-forward" on-tap="nextStep" disabled$="{{!showNext(currentStep)}}"></paper-icon-button>
           </div>
 
-          <!--
-          <div id="selector">
-            <template is="dom-repeat" items="{{models}}" as="model">
-              <div hidden$="{{!model.selected}}">
-                <template is="dom-repeat" items="{{model.options}}" as="option">
-                  <div class="option">
-                    <template is="dom-repeat" items="{{option.items}}">
-                      <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
-                                      class$="thumbnail {{selectedCss(item.name,selectedModel.selectedItem)}}" style$="{{getThumbCss(item.name)}}"
-                                      layer$="{{selectedModel.sku}}" item$="{{item.name}}" on-tap="selectItem">
-                        <span class="label">{{item.name}}</span>
-                      </paper-material>
+          <paper-dialog id="modal" modal opened$="{{showModal(currentStep)}}">
+            <div>
+
+              <neon-animated-pages selected="[[currentStep]]">
+                <template is="dom-repeat" items="{{selectionModels}}" as="model">
+                  <neon-animatable>
+                    <template is="dom-repeat" items="{{model.options}}" as="option">
+                      <div class="option" hidden$="{{option.hidden}}">
+                        <h3>What is the alliance selected defense?</h3>
+                        <div class="items">
+                          <template is="dom-repeat" items="{{option.items}}">
+                            <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.selected)}}"
+                                            class$="thumbnail {{selectedCss(item.selected)}} {{disabledCss(item.disabled)}}" style$="{{getThumbCss(item.name)}}"
+                                            layer$="{{selectedModel.sku}}" item$="{{item.name}}" on-tap="selectAudienceDefense">
+                              <span class="label">{{item.name}}</span>
+                            </paper-material>
+
+                          </template>
+                        </div>
+                        <paper-button on-tap="submitAudienceSelection">Submit</paper-button>
+                      </div>
                     </template>
-                  </div>
+                  </neon-animatable>
                 </template>
-              </div>
-            </template>
-          </div>
-          -->
+                <neon-animatable></neon-animatable>
+              </neon-animated-pages>
+            </div>
+          </paper-dialog>
         </div>
 
       </div>
-      <!--
-      <paper-header-panel main>
-        <paper-toolbar><paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button></paper-toolbar>
-        <div id="viewport">
-          <div id="vignette"></div>
-        </div>
-        <neon-animated-pages selected="[[selected]]" entry-animation="[[entryAnimation]]" exit-animation="[[exitAnimation]]">
-          <neon-animatable on-tap="nextSlide">1</neon-animatable>
-          <neon-animatable on-tap="previousSlide">2</neon-animatable>
-        </neon-animated-pages>
-        <content></content>
-      </paper-header-panel>
-      -->
     </paper-drawer-panel>
+
+
+
+    <paper-dialog id="introModal" opened modal>
+      <div>
+        <neon-animated-pages selected="[[introStep]]" entry-animation="slide-from-right-animation" exit-animation="slide-left-animation">
+          <neon-animatable>
+            <paper-material class="question" elevation="0">
+              <h3>Which alliance are you on?</h3>
+              <paper-dropdown-menu label="Alliance Color">
+                <paper-listbox class="dropdown-content" selected="{{color}}" attr-for-selected="value" selected-attribute="active">
+                  <paper-item value="r">Red</paper-item>
+                  <paper-item value="b">Blue</paper-item>
+                </paper-listbox>
+              </paper-dropdown-menu>
+              <paper-button on-tap="nextIntroStep">Submit</paper-button>
+            </paper-material>
+          </neon-animatable>
+          <neon-animatable>
+            <paper-material class="question" elevation="0">
+              <h3>What is the audience group?</h3>
+              <paper-dropdown-menu label="Audience Group">
+                <paper-listbox class="dropdown-content" selected="{{audienceGroup}}" attr-for-selected="value" selected-attribute="active">
+                  <paper-item value="a">A</paper-item>
+                  <paper-item value="b">B</paper-item>
+                  <paper-item value="c">C</paper-item>
+                  <paper-item value="d">D</paper-item>
+                </paper-listbox>
+              </paper-dropdown-menu>
+              <paper-button on-tap="nextIntroStep">Submit</paper-button>
+            </paper-material>
+          </neon-animatable>
+        </neon-animated-pages>
+      </div>
+    </paper-dialog>
+
+    <paper-toast id="allianceToast">Please select an alliance...</paper-toast>
+    <paper-toast id="audienceToast">Please select an audience group...</paper-toast>
+    <paper-toast id="audienceDefenseToast">Please select an audience defense...</paper-toast>
+
+
   </template>
 
 </dom-module>
@@ -708,11 +782,14 @@ Example:
       //'targets.track' : 'vignetteDrag',
       //'selector.tap': 'selectorTap',
       //"iron-resize" : "onResize"
-      "canvas.model-selected": "onModelSelect",
-      "canvas.initialized": "onCanvasInitialized"
+      "canvas.model-selected": "onModelsSelect",
     },
 
     properties: {
+      introStep: {
+        type: Number,
+        value: 0,
+      },
 
       currentStep: {
         type: Number,
@@ -722,7 +799,8 @@ Example:
 
       color: {
         type: String,
-        value: "b"
+        value: null,
+        observer: 'onColorChange'
       },
 
       installed: {
@@ -733,13 +811,6 @@ Example:
       side:{
         type: String,
         value: "A0"
-      },
-
-      precacheUrls: {
-        type: Array,
-        value: function(){
-          return [];
-        },
       },
 
       imageUrl: {
@@ -765,7 +836,8 @@ Example:
         type: Object,
         value: function(){
           return null;
-        }
+        },
+        observer: "onSelectionModelsChange"
       },
 
       imageMap: {
@@ -822,7 +894,12 @@ Example:
 
       audienceGroup: {
         type: String,
-        value: "a"
+        value: null
+      },
+
+      audienceDefenseSelected:{
+        type: Boolean,
+        value: false
       }
 
     },
@@ -876,14 +953,81 @@ Example:
 
     // Element Behavior
 
-    onCanvasInitialized: function(){
-      this.set("currentStep", 0);
+    nextIntroStep: function(){
+      if(this.introStep > 0){
+        if(!this.audienceGroup){
+          this.$.audienceToast.open();
+          return;
+        }
+
+        this.set("currentStep", 0);
+        this.$.introModal.close();
+      }else{
+        if(!this.color){
+          this.$.allianceToast.open();
+          return;
+        }
+        this.set("introStep", this.introStep + 1);
+      }
+
+    },
+
+    showControls: function(currentStep){
+      return false;
+      //return this.currentStep > 2;
+    },
+
+    showZoom: function(currentStep){
+      return this.currentStep > 2;
+    },
+
+    showSelector: function(currentStep){
+      if(this.currentStep == null){
+        return false;
+      }else{
+        return this.currentStep < 2;
+      }
+
+    },
+
+    showModal: function(currentStep){
+      if(this.currentStep == null){
+        return false;
+      }else{
+        return this.currentStep == 2;
+      }
+
+    },
+
+    openModal: function(currentStep, type){
+      if(this.currentStep == null){
+        return false;
+      }else{
+        return type == "modal" && this.currentStep == 2;
+      }
+
+    },
+
+    onSelectionModelsChange: function(selectionModels){
+      if(selectionModels){
+        //this.set("currentStep", 0);
+      }
+    },
+
+    onColorChange: function(color){
+      if(this.color == "b"){
+        this.set("side", "A0");
+        this.$.canvas.initialize();
+      }else if(this.color == "r"){
+        this.set("side", "A180");
+        this.$.canvas.initialize();
+      }
     },
 
     onStepChange: function(step){
 
       if(this.selectionModels){
-        if(step == 0){
+        if(step < 2){
           //hide audience group
 
           var model = this.selectionModels[step];
@@ -895,7 +1039,7 @@ Example:
               this.set("selectionModels." + step + ".options." + x + ".hidden", false);
             }
           }
-        }else if(step == 1){
+        }else if(step == 2){
           //only show audience group
 
           var model = this.selectionModels[step];
@@ -914,25 +1058,28 @@ Example:
 
 
       if(this.$.canvas.initialized){
-        if(this.color == "b"){
-          if(step == 0 || step == 1){
-            this.set("side", "A0");
-            this.$.canvas.initialize();
-          }else if(step == 2){
-            this.set("side", "A180");
-            this.$.canvas.initialize();
-          }
+        if(step == 0){
+          this.$.canvas.scrollToBottom();
+        }else if(step == 1){
+          this.$.canvas.scrollToTop();
         }else{
-          if(step == 0 || step == 1){
-            this.set("side", "A180");
-            this.$.canvas.initialize();
-          }else if(step == 2){
-            this.set("side", "A0");
-            this.$.canvas.initialize();
-          }
+          this.$.canvas.scrollToCenter();
         }
 
       }
+
+      this.$.canvas.paintScene();
+    },
+
+    showPrevious: function(currentStep){
+      if(currentStep > 0){
+        return true;
+      }
+      return false;
+    },
+
+    showNext: function(currentStep){
+      return true;
     },
 
     previousStep: function(){
@@ -940,6 +1087,14 @@ Example:
     },
 
     nextStep: function(){
+      this.set("currentStep", this.currentStep + 1);
+    },
+
+    submitAudienceSelection: function(){
+      if(!this.audienceDefenseSelected){
+        this.$.audienceDefenseToast.open();
+        return;
+      }
       this.set("currentStep", this.currentStep + 1);
     },
 
@@ -959,6 +1114,44 @@ Example:
       this.entryAnimation = 'slide-from-left-animation';
       this.exitAnimation = 'slide-right-animation';
       this.selected = this.selected === 0 ? 4 : (this.selected - 1);
+    },
+
+    selectAudienceDefense: function(event){
+      this.audienceDefenseSelected = true;
+      var modelId = Polymer.dom(event).rootTarget.getAttribute("model");
+      for(var i = 0; i < this.selectionModels.length; i++){
+          var model = this.selectionModels[i];
+          if(model.id == modelId){
+            for(var x = 0; x < model.options.length; x++){
+              var option = model.options[x];
+              for(var y = 0; y < option.items.length; y++){
+                var item = option.items[y];
+                if(item.sku == event.model.item.sku){
+                  this.set("selectionModels."+ i + ".options." + x + ".items." + y + ".selected", true);
+                }else{
+                  this.set("selectionModels."+ i + ".options." + x + ".items." + y + ".selected", false);
+                }
+              }
+            }
+          }
+      }
+
+      for(var i = 0; i < this.models.length; i++){
+        var model = this.models[i];
+        if(model.id.indexOf("3") > -1){
+          for(var x = 0; x < model.options.length; x++){
+            var option = model.options[x];
+            for(var y = 0; y < option.items.length; y++){
+              var item = option.items[y];
+              if(item.sku == event.model.item.sku){
+                this.set("models."+ i + ".options." + x + ".items." + y + ".selected", true);
+              }else{
+                this.set("models."+ i + ".options." + x + ".items." + y + ".selected", false);
+              }
+            }
+          }
+        }
+      }
     },
 
     selectItem: function(event){
@@ -1139,8 +1332,16 @@ Example:
       return "";
     },
 
-    getElevation: function(modelName, selectedModel){
-      if(modelName.toLowerCase() == selectedModel.toLowerCase()){return 1;
+    disabledCss: function(isDisabled){
+      if(isDisabled){
+        return "disabled";
+      }
+      return "";
+    },
+
+    getElevation: function(selected){
+      if(selected){
+        return 1;
       }
       return 0;
     },
@@ -1197,6 +1398,10 @@ Example:
                 x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
                 y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
 
+        if(Polymer.dom(event.target).node.classList.contains("disabled")){
+          return;
+        }
+
         // translate the element
         target.style.webkitTransform =
                 target.style.transform =
@@ -1223,7 +1428,7 @@ Example:
 
 
 
-      interact(".thumbnail",{
+      interact(".draggable",{
         //context:this.$$(".someContainer")
       })
               .draggable({
