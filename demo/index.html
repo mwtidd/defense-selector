@@ -663,10 +663,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       var baseOptions = [
-        {'sku': 'a', 'name':'Category A','items':[{'name':'portcullis','sku':'a2'},{'name':'cheval','sku':'a1'}]},
-        {'sku':'b', 'name':'Category B','items':[{'name':'moat','sku':'b2'},{'name':'ramparts','sku':'b1'}]},
-        {'sku':'c', 'name':'Category C','items':[{'name':'drawbridge','sku':'c1'},{'name':'sallyport','sku':'c2'}]},
-        {'sku':'d','name':'Category D','items':[{'name':'terrain','sku':'d1'},{'name':'wall','sku':'d2'}]}];
+        {'sku': 'a', 'name':'Group A','items':[{'name':'portcullis','sku':'a2'},{'name':'cheval','sku':'a1'}]},
+        {'sku':'b', 'name':'Group B','items':[{'name':'moat','sku':'b2'},{'name':'ramparts','sku':'b1'}]},
+        {'sku':'c', 'name':'Group C','items':[{'name':'drawbridge','sku':'c1'},{'name':'sallyport','sku':'c2'}]},
+        {'sku':'d','name':'Group D','items':[{'name':'terrain','sku':'d1'},{'name':'wall','sku':'d2'}]}];
       var models = [
         {'id': 'r1', 'color': 'r', 'sku': 'p1', 'name':'Positon 1', 'options': [{'sku':'e','name':'Low Bar','items':[{'sku':'e1','selected':true}]}]},
         {'id': 'r2', 'color': 'r', 'sku':'p2', 'name':'Position 2', 'options':cloneArray(baseOptions)},
@@ -684,9 +684,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ];
 
       var selectionModels = [
-        {'id':'s1', 'type':'selector', 'name': 'Select Your Defenses', 'options': cloneArray(baseOptions)},
-        {'id':'s2', 'type':'selector', 'name': 'Enter the Your Opponents\' Defenses', 'options': cloneArray(baseOptions)},
-        {'id':'s3', 'type':'modal', 'name': 'Enter the Your Audience Selected Defense', 'options': cloneArray(baseOptions)},
+        {'id':'s1', 'type':'selector', 'label': 'Select the Defenses for Your Castle', 'options': cloneArray(baseOptions)},
+        {'id':'s2', 'type':'selector', 'label': 'Enter the Your Opponents\' Defenses', 'options': cloneArray(baseOptions)},
+        {'id':'s3', 'type':'modal', 'label': 'Enter the Your Audience Selected Defense', 'options': cloneArray(baseOptions)},
       ];
 
       var rules = [{'modelSku': 'p1', static: true}, {'modelSku': 'p3', restricted: true},{'optionSku':'a','maxValueCount':'1'},{'optionSku':'b','maxValueCount':'1'},{'optionSku':'c','maxValueCount':'1'},{'optionSku':'d','maxValueCount':'1'},{'optionSku':'b','disabled':true}];
@@ -705,6 +705,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <link rel="import" href="../defense-selector.html">
     <link rel="import" href="../defense-canvas.html">
     <link rel="import" href="../team-stats.html">
+    <link rel="import" href="../match-defense-summary.html">
+    <link rel="import" href="../team-defense-summary.html">
   </head>
   <body>
 
@@ -712,12 +714,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <!--
     <defense-selector id="config" image-url="../demo"></defense-selector>
     https://1storage.googleapis.com/defenseselector -->
-
+    <!--
+    <defense-selector hidden id="config" image-url="https://storage.googleapis.com/defenseselector/"></defense-selector>
+    -->
     <defense-selector id="config" image-url="https://storage.googleapis.com/defenseselector/"></defense-selector>
-
 
     <!--
     <team-stats hidden></team-stats>
+    <match-defense-summary hidden></match-defense-summary>
+    <team-defense-summary></team-defense-summary>
     -->
 
     <!--

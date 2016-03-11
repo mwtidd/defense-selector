@@ -202,6 +202,7 @@ Example:
       position: absolute;
       right: 8px;
       top: 8px;
+      z-index: 2;
     }
 
     :host ::content #selector{
@@ -211,8 +212,8 @@ Example:
       /*overflow: hidden;*/
       bottom: 0;
       left: 0;
-      @apply(--layout-horizontal);
-      @apply(--layout-center-center);
+      @apply(--layout-vertical);
+      background: #e0e0e0;
     }
 
     :host ::content #selector neon-animated-pages{
@@ -223,21 +224,49 @@ Example:
 
     :host ::content #selector neon-animatable{
       @apply(--layout-flex);
-      @apply(--layout-horizontal);
-      @apply(--layout-center-center);
+      @apply(--layout-vertical);
     }
 
-    :host ::content #selector neon-animatable .option{
+    :host ::content #selector neon-animatable .options{
       @apply(--layout-flex);
       @apply(--layout-horizontal);
-      height: 100%;
+      position: relative;
+    }
+
+
+    :host ::content #selector neon-animatable .option{
+      position: relative;
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+      min-height: 100%;
       /*max-width: calc( (100% - 80px) /3);*/
+    }
+
+    :host ::content #selector neon-animatable .option .items{
+      position: relative;
+      @apply(--layout-flex);
+      @apply(--layout-horizontal);
+    }
+
+    :host ::content #selector #arrowBack{
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+    }
+
+    :host ::content #selector #nextStep{
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 2;
     }
 
     :host ::content .option .thumbnail{
       @apply(--layout-flex);
       margin: 8px;
-      background-color: rgba(255,255,255,.9);
+      background-color: #fff;
+      min-height: 100%;
     }
 
     :host ::content .option .thumbnail.disabled{
@@ -245,12 +274,13 @@ Example:
       cursor: default;
     }
 
-    :host ::content .option .thumbnail.selected{
+    :host ::content #selector .option .thumbnail.selected{
       opacity: 0;
     }
 
-    :host ::content #modal .option .thumbnail.selected{
-      opacity: 1;
+    :host ::content #selector h2, :host ::content #selector h3{
+      text-align: center;
+      margin: 0 8px;
     }
 
 
@@ -593,14 +623,19 @@ Example:
       width: 100%;
       height: 100%;
     }
-    paper-dialog paper-button{
-      margin-top: 8px;
+
+    paper-button{
+
       background-color: var(--paper-indigo-500);
       color: white;
       --paper-button-raised-keyboard-focus: {
-        background-color: var(--paper-pink-a200) !important;
+        background-color: var(--paper-indigo-200) !important;
         color: white !important;
       };
+    }
+
+    paper-dialog paper-button{
+      margin-top: 8px;
     }
 
     paper-dialog .option{
@@ -667,58 +702,35 @@ Example:
           -->
 
           <div id="selector" hidden$="{{!showSelector(currentStep)}}">
-            <paper-icon-button icon="arrow-back" on-tap="previousStep" disabled$="{{!showPrevious(currentStep)}}"></paper-icon-button>
+            <paper-icon-button id="arrowBack" icon="arrow-back" on-tap="previousStep" disabled$="{{!showPrevious(currentStep)}}"></paper-icon-button>
             <neon-animated-pages selected="[[currentStep]]" entry-animation="slide-from-bottom-animation" exit-animation="slide-down-animation">
               <template is="dom-repeat" items="{{selectionModels}}" as="model">
                 <neon-animatable>
-                  <template is="dom-repeat" items="{{model.options}}" as="option">
-                    <div class="option" hidden$="{{option.hidden}}">
-                      <template is="dom-repeat" items="{{option.items}}">
-                        <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
-                                        class$="thumbnail draggable {{selectedCss(item.selected)}} {{disabledCss(item.disabled)}}" style$="{{getThumbCss(item.name)}}"
-                                        layer$="{{selectedModel.sku}}" item$="{{item.name}}">
-                          <span class="label">{{item.name}}</span>
-                        </paper-material>
-
-                      </template>
-                    </div>
-                  </template>
-                </neon-animatable>
-              </template>
-              <neon-animatable></neon-animatable>
-            </neon-animated-pages>
-
-            <paper-icon-button icon="arrow-forward" on-tap="nextStep" disabled$="{{!showNext(currentStep)}}"></paper-icon-button>
-          </div>
-
-          <paper-dialog id="modal" modal opened$="{{showModal(currentStep)}}">
-            <div>
-
-              <neon-animated-pages selected="[[currentStep]]">
-                <template is="dom-repeat" items="{{selectionModels}}" as="model">
-                  <neon-animatable>
+                  <h2>[[model.label]]</h2>
+                  <div class="options">
                     <template is="dom-repeat" items="{{model.options}}" as="option">
                       <div class="option" hidden$="{{option.hidden}}">
-                        <h3>What is the alliance selected defense?</h3>
+                        <h3>[[option.name]]</h3>
                         <div class="items">
                           <template is="dom-repeat" items="{{option.items}}">
-                            <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.selected)}}"
-                                            class$="thumbnail {{selectedCss(item.selected)}} {{disabledCss(item.disabled)}}" style$="{{getThumbCss(item.name)}}"
-                                            layer$="{{selectedModel.sku}}" item$="{{item.name}}" on-tap="selectAudienceDefense">
+                            <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.name,selectedModel.selectedItem)}}"
+                                            class$="thumbnail draggable {{selectedCss(item.selected)}} {{disabledCss(item.disabled)}}" style$="{{getThumbCss(item.name)}}"
+                                            layer$="{{selectedModel.sku}}" item$="{{item.name}}">
                               <span class="label">{{item.name}}</span>
                             </paper-material>
 
                           </template>
                         </div>
-                        <paper-button on-tap="submitAudienceSelection">Submit</paper-button>
                       </div>
                     </template>
-                  </neon-animatable>
-                </template>
-                <neon-animatable></neon-animatable>
-              </neon-animated-pages>
-            </div>
-          </paper-dialog>
+                  </div>
+                </neon-animatable>
+              </template>
+              <neon-animatable></neon-animatable>
+            </neon-animated-pages>
+
+            <paper-button id="nextStep" on-tap="nextStep" disabled$="{{!showNext(currentStep)}}">Submit</paper-button>
+          </div>
         </div>
 
       </div>
@@ -754,6 +766,28 @@ Example:
               </paper-dropdown-menu>
               <paper-button on-tap="nextIntroStep">Submit</paper-button>
             </paper-material>
+          </neon-animatable>
+          <neon-animatable>
+            <template is="dom-repeat" items="{{selectionModels}}" as="model">
+              <neon-animatable>
+                <template is="dom-repeat" items="{{model.options}}" as="option">
+                  <div class="option" hidden$="{{!isMatch(option.sku, audienceGroup)}}">
+                    <h3>What is the alliance selected defense?</h3>
+                    <div class="items">
+                      <template is="dom-repeat" items="{{option.items}}">
+                        <paper-material model$="{{model.id}}" sku="{{item.sku}}" elevation$="{{getElevation(item.selected)}}"
+                                        class$="thumbnail {{selectedCss(item.selected)}} {{disabledCss(item.disabled)}}" style$="{{getThumbCss(item.name)}}"
+                                        layer$="{{selectedModel.sku}}" item$="{{item.name}}" on-tap="selectAudienceDefense">
+                          <span hidden class="label">{{item.name}}</span>
+                        </paper-material>
+
+                      </template>
+                    </div>
+                    <paper-button on-tap="submitAudienceSelection">Submit</paper-button>
+                  </div>
+                </template>
+              </neon-animatable>
+            </template>
           </neon-animatable>
         </neon-animated-pages>
       </div>
@@ -953,22 +987,24 @@ Example:
 
     // Element Behavior
 
-    nextIntroStep: function(){
-      if(this.introStep > 0){
-        if(!this.audienceGroup){
-          this.$.audienceToast.open();
-          return;
-        }
+    isMatch: function(item1, item2){
+      return item1 == item2;
+    },
 
-        this.set("currentStep", 0);
-        this.$.introModal.close();
-      }else{
+    nextIntroStep: function(){
+      if(this.introStep == 0){
         if(!this.color){
           this.$.allianceToast.open();
           return;
         }
-        this.set("introStep", this.introStep + 1);
+      }else if(this.introStep == 1){
+        if(!this.audienceGroup){
+          this.$.audienceToast.open();
+          return;
+        }
       }
+
+      this.set("introStep", this.introStep + 1);
 
     },
 
@@ -1095,7 +1131,9 @@ Example:
         this.$.audienceDefenseToast.open();
         return;
       }
-      this.set("currentStep", this.currentStep + 1);
+
+      this.set("currentStep", 0);
+      this.$.introModal.close();
     },
 
     /**
@@ -1415,7 +1453,7 @@ Example:
       }
 
       function dragEndListener (event){
-        if(!event.dropzone){
+        //if(!event.dropzone){
           var target = event.target;
 
           // translate the element
@@ -1425,7 +1463,7 @@ Example:
 
           target.setAttribute('data-x', 0);
           target.setAttribute('data-y', 0);
-        }
+        //}
       }
 
 

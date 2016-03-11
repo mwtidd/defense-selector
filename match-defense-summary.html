@@ -1,0 +1,369 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../font-roboto-local/roboto.html">
+
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../paper-card/paper-card.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
+<link rel="import" href="../paper-item/paper-item.html">
+
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+
+
+<link rel="import" href="defense-score.html">
+<!--
+An element to start from.
+
+Example:
+
+    <match-defense-summary></match-defense-summary>
+
+@demo
+-->
+<dom-module id="match-defense-summary">
+
+  <style is="custom-style">
+    :host {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    :host .secondary{
+      color: #999;
+    }
+
+    :host #allianceSelector{
+      position: absolute;
+      top: 8px;
+      right: 8px;
+    }
+
+    :host ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    :host ::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+      border-radius: 2px;
+    }
+
+    :host ::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+    }
+
+    :host paper-card{
+      margin: 8px;
+      width: calc(100% - 16px);
+      height: calc(100% - 16px);
+      @apply(--layout-vertical);
+    }
+
+    :host paper-card .card-content{
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+    }
+
+    :host paper-material{
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+    }
+
+
+
+    :host .rows{
+      @apply(--layout-flex);
+      overflow-y: scroll;
+      max-height: 100%;
+    }
+
+    :host paper-card .table .row{
+      line-height: 48px;
+    }
+
+    :host .header-row{
+      font-weight: 500;
+      font-size: 13px;
+      color: #757575;
+      line-height: 56px;
+    }
+
+
+
+    :host .row {
+
+      @apply(--layout-horizontal);
+
+      font-size: 13px;
+
+      --paper-input-container-underline: {
+        display: none;
+      };
+
+      --paper-input-container-underline-focus: {
+        display: none;
+      };
+
+      --paper-input-container-underline-disabled: {
+        display: none;
+      };
+
+      --paper-font-subhead: {
+        /* @apply(--paper-font-common-base) */
+        font-family: 'Roboto', 'Noto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+
+        font-size: 13px;
+        font-weight: 400;
+        /*line-height: 24px*/
+      };
+
+      padding: 0px 16px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    :host ::content .row iron-icon{
+      width: 13px;
+      height: 13px;
+    }
+
+    :host ::content .row > * {
+      @apply(--layout-flex);
+      padding-right: 24px;
+    }
+
+    :host ::content .row > *{
+      text-align: right;
+    }
+
+    :host ::content .row > *:nth-child(1){
+      max-width: 25px;
+    }
+
+    :host ::content .row > *:nth-child(2),  :host ::content .row > *:nth-child(3){
+      min-width: 125px;
+    }
+
+    :host ::content .row > *:nth-child(1), :host ::content .row > *:nth-child(2),  :host ::content .row > *:nth-child(3)  {
+      text-align: left;
+      padding-right: 24px;
+    }
+
+    :host ::content .row > *:last-child {
+      padding-right: 24px;
+    }
+
+    :host ::content .row.header-row {
+      padding-right: 20px;
+    }
+
+    :host ::content .row.footer-row {
+      border-bottom: none;
+    }
+
+  </style>
+
+  <template>
+    <iron-ajax hidden auto url="http://10.241.251.58:8888/bobanalytics?type=defense"
+               handle-as="json" on-response="gotAdvancedStats"></iron-ajax>
+
+
+    <paper-card heading="Defense Scoring" elevation="2">
+      <paper-dropdown-menu label="Alliance Color" id="allianceSelector">
+        <paper-listbox class="dropdown-content" selected="{{color}}" attr-for-selected="value" selected-attribute="active">
+          <paper-item value="r">Red</paper-item>
+          <paper-item value="b">Blue</paper-item>
+        </paper-listbox>
+      </paper-dropdown-menu>
+      <div class="card-content">
+        <paper-material elevation="0" class="table">
+          <div class="header-row row">
+            <div>#</div>
+            <div>Partners</div>
+            <div>Opponents</div>
+            <div>Cheval</div>
+            <div>Port</div>
+            <div>Ramp</div>
+            <div>Moat</div>
+            <div>Sally</div>
+            <div>Bridge</div>
+            <div>Wall</div>
+            <div>Terrain</div>
+            <div>Bar</div>
+          </div>
+          <div class="rows">
+            <template is="dom-repeat" items="{{teamStats}}" filter="{{redFilter(color)}}">
+              <paper-item class="row">
+                <div>[[item.match.matchNumber]]</div>
+                <div>[[getTeams(item.blueTeams)]]</div>
+                <div>[[getTeams(item.redTeams)]]</div>
+                <defense-score strength="[[item.redSummary.A_ChevalDeFrise]]" percentage="[[item.redPercentage.A_ChevalDeFrise]]"></defense-score>
+                <defense-score strength="[[item.redSummary.A_Portcullis]]" percentage="[[item.redPercentage.A_Portcullis]]"></defense-score>
+                <defense-score strength="[[item.redSummary.B_Ramparts]]" percentage="[[item.redPercentage.B_Ramparts]]"></defense-score>
+                <defense-score strength="[[item.redSummary.B_Moat]]"  percentage="[[item.redPercentage.B_Moat]]"></defense-score>
+                <defense-score strength="[[item.redSummary.C_SallyPort]]"  percentage="[[item.redPercentage.C_SallyPort]]"></defense-score>
+                <defense-score strength="[[item.redSummary.C_Drawbridge]]"  percentage="[[item.redPercentage.C_Drawbridge]]"></defense-score>
+                <defense-score strength="[[item.redSummary.D_RockWall]]" percentage="[[item.redPercentage.D_RockWall]]" ></defense-score>
+                <defense-score strength="[[item.redSummary.D_RoughTerrain]]" percentage="[[item.redPercentage.D_RoughTerrain]]" ></defense-score>
+                <defense-score strength="[[item.redSummary.E_Low_Bar]]"  percentage="[[item.redPercentage.E_Low_Bar]]"></defense-score>
+              </paper-item>
+            </template>
+            <template is="dom-repeat" items="{{teamStats}}" filter="{{blueFilter(color)}}">
+              <paper-item class="row">
+                <div>[[item.match.matchNumber]]</div>
+                <div>[[getTeams(item.redTeams)]]</div>
+                <div>[[getTeams(item.blueTeams)]]</div>
+                <defense-score strength="[[item.blueSummary.A_ChevalDeFrise]]"  percentage="[[item.bluePercentage.A_ChevalDeFrise]]"></defense-score>
+                <defense-score strength="[[item.blueSummary.A_Portcullis]]" percentage="[[item.bluePercentage.A_Portcullis]]" ></defense-score>
+                <defense-score strength="[[item.blueSummary.B_Ramparts]]"  percentage="[[item.bluePercentage.B_Ramparts]]"></defense-score>
+                <defense-score strength="[[item.blueSummary.B_Moat]]" percentage="[[item.bluePercentage.B_Moat]]" ></defense-score>
+                <defense-score strength="[[item.blueSummary.C_SallyPort]]" percentage="[[item.bluePercentage.C_SallyPort]]" ></defense-score>
+                <defense-score strength="[[item.blueSummary.C_Drawbridge]]" percentage="[[item.bluePercentage.C_Drawbridge]]" ></defense-score>
+                <defense-score strength="[[item.blueSummary.D_RockWall]]" percentage="[[item.bluePercentage.D_RockWall]]" ></defense-score>
+                <defense-score strength="[[item.blueSummary.D_RoughTerrain]]" percentage="[[item.bluePercentage.D_RoughTerrain]]" ></defense-score>
+                <defense-score strength="[[item.blueSummary.E_Low_Bar]]" percentage="[[item.bluePercentage.E_Low_Bar]]" ></defense-score>
+              </paper-item>
+            </template>
+          </div>
+          <div class="footer-row row">
+            <div></div>
+            <div><span class="secondary">Breach Prevention Strength | Defense Damage % | </span><span>Scaled Score</span></div>
+            <div><iron-icon icon="check"></iron-icon>: 100 Pick    <iron-icon icon="clear"></iron-icon>: 0 Avoid</div>
+            <div></div>
+          </div>
+        </paper-material>
+      </div>
+    </paper-card>
+
+    <content></content>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'match-defense-summary',
+
+    behaviors: [
+
+    ],
+
+    listeners: {
+
+    },
+
+    properties: {
+      teamStats: {
+        type: Array,
+        value: []
+      },
+
+      color: {
+        type: String,
+        value: "r"
+      }
+
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+
+    showRed: function(color){
+      return color == "b";
+    },
+
+    showBlue: function(color){
+      return color == "r";
+    },
+
+    // Element Behavior
+
+    getTeams: function(teams){
+      var teamNumbers = [];
+      teams.forEach(function(team){
+        teamNumbers.push(parseInt(team));
+      });
+      teamNumbers.sort(function(a,b){return a - b;});
+      var teamNames = ""
+      teamNumbers.forEach(function(team){
+        teamNames += team + " ";
+      });
+      return teamNames;
+    },
+
+    gotAdvancedStats: function(event){
+      var stats =  event.detail.response;
+      while(this.teamStats.length > 0){
+        this.pop("teamStats");
+      }
+      stats.forEach(function(teamStat){
+        this.push("teamStats", teamStat);
+      }, this);
+    },
+
+    redFilter: function(color){
+      if(!color){
+        return function(item){ return false; };
+      }else{
+        color = color.toLowerCase();
+        return function(item) {
+          return color == "r";
+        };
+      }
+    },
+
+    blueFilter: function(color){
+      if(!color){
+        return function(item){ return false; };
+      }else{
+        color = color.toLowerCase();
+        return function(item) {
+          return color == "b";
+        };
+      }
+    }
+
+  });
+
+</script>

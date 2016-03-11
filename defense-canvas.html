@@ -849,7 +849,7 @@ Example:
           _img.src = this.imageUrl + fileName + ".png";
           _img.onload = function () {
             count--;
-            if(_disabled) context.globalAlpha = .2;
+            if(_disabled) context.globalAlpha = .1;
             context.drawImage(_img, 0, 0, _img.width, _img.height, image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
             if(_disabled) context.globalAlpha = 1;
             if(count == 0){
@@ -927,7 +927,7 @@ Example:
               var _img = new Image();
                 _img.src = this.imageUrl + fileName + ".png";
                 _img.onload = function(){
-                  if(_disabled) context.globalAlpha = 0;
+                  if(_disabled) context.globalAlpha = .2;
                   context.drawImage(_img, 0, 0, _img.width , _img.height , image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
                   if(_disabled) context.globalAlpha = 1;
                 }.bind(this);
@@ -959,6 +959,12 @@ Example:
           },
           ondrop:function(ev){
             var card = ev.relatedTarget;
+
+
+            if(Polymer.dom(card).node.classList.contains("disabled")){
+              return;
+            }
+
             var dropzone = ev.target;
             var modelId = Polymer.dom(dropzone).node.id;
             var itemSku = Polymer.dom(card).node.sku;

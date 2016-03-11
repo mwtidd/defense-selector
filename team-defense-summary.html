@@ -1,0 +1,327 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../font-roboto-local/roboto.html">
+
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../paper-card/paper-card.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-input/paper-input.html">
+
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+
+
+<link rel="import" href="defense-score.html">
+<!--
+An element to start from.
+
+Example:
+
+    <team-defense-summary></team-defense-summary>
+
+@demo
+-->
+<dom-module id="team-defense-summary">
+
+  <style is="custom-style">
+    :host {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    :host .secondary{
+      color: #999;
+    }
+
+    :host #teamNumberInput{
+      position: absolute;
+      top: 8px;
+      right: 8px;
+    }
+
+    :host ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    :host ::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+      border-radius: 2px;
+    }
+
+    :host ::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+    }
+
+    :host paper-card{
+      margin: 8px;
+      width: calc(100% - 16px);
+      height: calc(100% - 16px);
+      @apply(--layout-vertical);
+    }
+
+    :host paper-card .card-content{
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+    }
+
+    :host paper-material{
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+    }
+
+
+
+    :host .rows{
+      @apply(--layout-flex);
+      overflow-y: scroll;
+      max-height: 100%;
+    }
+
+    :host paper-card .table .row{
+      line-height: 48px;
+    }
+
+    :host .header-row{
+      font-weight: 500;
+      font-size: 13px;
+      color: #757575;
+      line-height: 56px;
+    }
+
+
+
+    :host .row {
+
+      @apply(--layout-horizontal);
+
+      font-size: 13px;
+
+      /*
+
+      --paper-input-container-underline: {
+        display: none;
+      };
+
+      --paper-input-container-underline-focus: {
+        display: none;
+      };
+
+      --paper-input-container-underline-disabled: {
+        display: none;
+      };
+
+      */
+
+      --paper-font-subhead: {
+        /* @apply(--paper-font-common-base) */
+        font-family: 'Roboto', 'Noto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+
+        font-size: 13px;
+        font-weight: 400;
+        /*line-height: 24px*/
+      };
+
+      padding: 0px 16px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    :host ::content .row iron-icon{
+      width: 13px;
+      height: 13px;
+    }
+
+    :host ::content .row > * {
+      @apply(--layout-flex);
+      padding-right: 24px;
+    }
+
+    :host ::content .row > *{
+      text-align: right;
+    }
+
+    :host ::content .row > *:nth-child(1){
+      max-width: 25px;
+    }
+
+    :host ::content .row > *:nth-child(2),  :host ::content .row > *:nth-child(3){
+      min-width: 125px;
+    }
+
+    :host ::content .row > *:nth-child(1), :host ::content .row > *:nth-child(2),  :host ::content .row > *:nth-child(3)  {
+      text-align: left;
+      padding-right: 24px;
+    }
+
+    :host ::content .row > *:last-child {
+      padding-right: 24px;
+    }
+
+    :host ::content .row.header-row {
+      padding-right: 20px;
+    }
+
+    :host ::content .row.footer-row {
+      border-bottom: none;
+    }
+
+  </style>
+
+  <template>
+    <iron-ajax hidden auto url="http://10.241.251.58:8888/bobanalytics?type=advanced"
+               handle-as="json" on-response="gotAdvancedStats"></iron-ajax>
+
+
+    <paper-card heading="Defense Scoring" elevation="2">
+      <paper-input label="team #" id="teamNumberInput" value="{{teamNumber}}"></paper-input>
+      <div class="card-content">
+        <paper-material elevation="0" class="table">
+          <div class="header-row row">
+            <div>#</div>
+            <div>Cheval</div>
+            <div>Port</div>
+            <div>Ramp</div>
+            <div>Moat</div>
+            <div>Sally</div>
+            <div>Bridge</div>
+            <div>Wall</div>
+            <div>Terrain</div>
+            <div>Bar</div>
+          </div>
+          <div class="rows">
+            <template is="dom-repeat" items="{{teamStats}}" filter="{{teamFilter(teamNumber)}}">
+              <paper-item class="row">
+                <div>[[item.teamNumber]]</div>
+                <defense-score strength="[[item.averageDefenseStrengths.A_ChevalDeFrise]]" percentage="[[item.defenseDamagedPercentage.A_ChevalDeFrise]]"></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.A_Portcullis]]" percentage="[[item.defenseDamagedPercentage.A_Portcullis]]"></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.B_Ramparts]]" percentage="[[item.defenseDamagedPercentage.B_Ramparts]]"></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.B_Moat]]"  percentage="[[item.defenseDamagedPercentage.B_Moat]]"></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.C_SallyPort]]"  percentage="[[item.defenseDamagedPercentage.C_SallyPort]]"></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.C_Drawbridge]]"  percentage="[[item.defenseDamagedPercentage.C_Drawbridge]]"></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.D_RockWall]]" percentage="[[item.defenseDamagedPercentage.D_RockWall]]" ></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.D_RoughTerrain]]" percentage="[[item.defenseDamagedPercentage.D_RoughTerrain]]" ></defense-score>
+                <defense-score strength="[[item.averageDefenseStrengths.E_Low_Bar]]"  percentage="[[item.defenseDamagedPercentage.E_Low_Bar]]"></defense-score>
+              </paper-item>
+            </template>
+          </div>
+          <div class="footer-row row">
+            <div></div>
+            <div><span class="secondary">Breach Prevention Strength | Defense Damage % | </span><span>Scaled Score</span></div>
+            <div><iron-icon icon="check"></iron-icon>: 100 Pick    <iron-icon icon="clear"></iron-icon>: 0 Avoid</div>
+            <div></div>
+          </div>
+        </paper-material>
+      </div>
+    </paper-card>
+
+    <content></content>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'team-defense-summary',
+
+    behaviors: [
+
+    ],
+
+    listeners: {
+
+    },
+
+    properties: {
+      teamStats: {
+        type: Array,
+        value: []
+      },
+
+      teamNumber: {
+        type: Number,
+        value: null
+      }
+
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+
+    // Element Behavior
+
+    getTeams: function(teams){
+      var teamNumbers = [];
+      teams.forEach(function(team){
+        teamNumbers.push(parseInt(team));
+      });
+      teamNumbers.sort(function(a,b){return a - b;});
+      var teamNames = ""
+      teamNumbers.forEach(function(team){
+        teamNames += team + " ";
+      });
+      return teamNames;
+    },
+
+    gotAdvancedStats: function(event){
+      var stats =  event.detail.response;
+      while(this.teamStats.length > 0){
+        this.pop("teamStats");
+      }
+      stats.forEach(function(teamStat){
+        this.push("teamStats", teamStat);
+      }, this);
+    },
+
+    teamFilter: function(teamNumber){
+      if(!teamNumber){
+        return null;
+      }else{
+        return function(team) {
+          return team.teamNumber.indexOf(teamNumber.toString()) > -1;
+        };
+      }
+    },
+
+  });
+
+</script>
