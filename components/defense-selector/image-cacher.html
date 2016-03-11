@@ -1,0 +1,234 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../font-roboto-local/roboto.html">
+
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+
+
+
+<script src="../interact/dist/interact.min.js"></script>
+
+<!--
+An element to start from.
+
+Example:
+
+    <image-cacher></image-cacher>
+
+@demo
+-->
+<dom-module id="image-cacher">
+
+  <style is="custom-style">
+    
+  </style>
+
+  <template>
+    <content></content>
+    <platinum-sw-register id="imageService">
+      <platinum-sw-cache precache="{{precacheUrls0}}" cache-id="defense-selector-a0" default-cache-strategy="cacheFirst"></platinum-sw-cache>
+      <platinum-sw-cache precache="{{precacheUrls180}}" cache-id="defense-selector-a180" default-cache-strategy="cacheFirst"></platinum-sw-cache>
+    </platinum-sw-register>
+
+    <!--
+    <platinum-sw-register id="imageService2">
+      <platinum-sw-cache precache="{{precacheUrls45}}" cache-config-file$="cache-config-A45.json"></platinum-sw-cache>
+      <platinum-sw-cache precache="{{precacheUrls90}}" cache-config-file$="cache-config-A90.json"></platinum-sw-cache>
+
+      <platinum-sw-cache precache="{{precacheUrls135}}" cache-config-file$="cache-config-A135.json"></platinum-sw-cache>
+     <platinum-sw-cache precache="{{precacheUrls225}}" cache-config-file$="cache-config-A225.json"></platinum-sw-cache>
+      <platinum-sw-cache precache="{{precacheUrls270}}" cache-config-file$="cache-config-A270.json"></platinum-sw-cache>
+      <platinum-sw-cache precache="{{precacheUrls315}}" cache-config-file$="cache-config-A315.json"></platinum-sw-cache>
+    </platinum-sw-register>
+    -->
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'image-cacher',
+
+    behaviors: [
+
+    ],
+
+    listeners: {
+      'service-worker-installed': 'onInstalled',
+      'service-worker-updated': 'onUpdated',
+      'service-worker-error': 'onError',
+    },
+
+    properties: {
+
+      installed: {
+        type: Boolean,
+        value: false
+      },
+
+      precacheUrls0: {
+          type: Array,
+          value: function(){
+            return [];
+          },
+        },
+      precacheUrls45: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+      precacheUrls90: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+      precacheUrls135: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+      precacheUrls180: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+      precacheUrls225: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+
+      precacheUrls270: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+      precacheUrls315: {
+        type: Array,
+        value: function(){
+          return [];
+        },
+      },
+
+
+
+      imageUrl: {
+        type: "String",
+        value: ""
+      },
+
+      imageMap: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      }
+
+
+
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+
+    },
+
+    // Element Behavior
+
+
+    initPrecache: function(){
+      if(!this.installed){
+        this.set("loadingState", "indexing images...");
+
+        for (var property in this.imageMap) {
+          if(property.indexOf("A0") > -1){
+            this.push("precacheUrls0", this.imageUrl + property + ".png");
+          }else if(property.indexOf("A45") > -1){
+            this.push("precacheUrls45", this.imageUrl + property + ".png");
+          }else if(property.indexOf("A90") > -1){
+            this.push("precacheUrls90", this.imageUrl + property + ".png");
+          }else if(property.indexOf("A135") > -1){
+            this.push("precacheUrls135", this.imageUrl + property + ".png");
+          }else if(property.indexOf("A180") > -1){
+            this.push("precacheUrls180", this.imageUrl + property + ".png");
+          }else if(property.indexOf("A225") > -1){
+            this.push("precacheUrls225", this.imageUrl + property + ".png");
+          }else if(property.indexOf("A270") > -1){
+            this.push("precacheUrls270", this.imageUrl + property + ".png");
+          }else if(property.indexOf("A315") > -1){
+            this.push("precacheUrls315", this.imageUrl + property + ".png");
+          }
+        }
+
+        this.$.imageService.register();
+        //this.$.imageService2.register();
+      }else{
+        this.fire("loaded");
+      }
+    },
+
+
+    onInstalled: function(event){
+      console.log("sw installed");
+      this.fire("loaded");
+    },
+
+    onUpdated: function(event){
+      console.log("sw updated");
+      this.fire("loaded");
+    },
+
+    onError: function(event){
+      console.error("A service worker error occurred");
+    },
+  });
+
+</script>

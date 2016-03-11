@@ -1,0 +1,152 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../font-roboto-local/roboto.html">
+
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+
+<script src="../interact/dist/interact.min.js"></script>
+
+<!--
+An element to start from.
+
+Example:
+
+    <defense-score></defense-score>
+
+@demo
+-->
+<dom-module id="defense-score">
+
+  <style is="custom-style">
+    :host {
+      font-family: 'Roboto';
+
+    }
+
+    :host span{
+    }
+
+    :host .secondary{
+      color: #999;
+    }
+
+  </style>
+
+  <template>
+    <div hidden$="{{showNa(strength, percentage)}}">
+      <span class="secondary">[[strength]] | [[percentage]]% | </span>
+      <iron-icon icon="check" hidden$="{{!showCheck(strength, percentage)}}"></iron-icon>
+      <iron-icon icon="clear" hidden$="{{!showX(strength, percentage)}}"></iron-icon>
+      <span hidden$="{{!showText(strength, percentage)}}">[[getProduct(strength, percentage)]]</span>
+    </div>
+
+    <span hidden$="{{!showNa(strength, percentage)}}">N/A</span>
+    <content></content>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'defense-score',
+
+    behaviors: [
+
+    ],
+
+    listeners: {
+
+    },
+
+    properties: {
+
+      strength: {
+        type: Number,
+        value: null
+      },
+
+      percentage: {
+        type: Number,
+        value: null
+      }
+
+
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+      if (typeof this.strength === "undefined") {
+        this.set("strength", 0);
+      }
+
+      if (typeof this.percentage === "undefined") {
+        this.set("percentage", -1);
+      }
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+
+    // Element Behavior
+
+    inversePercentage: function(percentage){
+      return  100 - percentage;
+    },
+
+    showX: function(strength, percentage){
+      return (strength == 0 || percentage == 100) && !this.showNa(strength, percentage);
+    },
+
+    showCheck: function(strength, percentage){
+      return strength == 2 && percentage == 0;
+    },
+
+    showText: function(strength, percentage){
+      return !this.showX(strength, percentage) && !this.showCheck(strength, percentage) && !this.showNa(strength, percentage);
+    },
+
+    getProduct: function(strength, percentage){
+      return Math.round( strength * ((100 - percentage)/100) * 50 );
+    },
+
+    showNa: function(strength, percentage){
+      return strength == -1 || percentage == -1;
+    }
+
+  });
+
+</script>

@@ -1,0 +1,1142 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../font-roboto-local/roboto.html">
+
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+
+<link rel="import" href="image-cacher.html">
+
+
+
+<script src="../interact/dist/interact.min.js"></script>
+
+<!--
+An element to start from.
+
+Example:
+
+    <defense-canvas></defense-canvas>
+
+@demo
+-->
+<dom-module id="defense-canvas">
+
+  <style is="custom-style">
+    :host {
+      display: block;
+      font-family: 'Roboto';
+      background-color: rgb(54,54,54);
+      overflow: hidden;
+      position: relative;
+    }
+
+    :host #viewport{
+      float:left;
+      width: 100%;
+      height: 100%;
+    }
+
+    :host #view{
+      position: relative;
+
+    }
+
+    :host #view.scroll{
+      -webkit-transition: -webkit-transform 500ms ease-in;
+      -moz-transition: -moz-transform 500ms ease-in;
+      -o-transition: -o-transform 500ms ease-in;
+      transition: transform 500ms ease-in;
+    }
+
+    :host canvas{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    :host #targets{
+      display: none;
+    }
+
+    :host #targets.A0, :host #targets.A180{
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+
+
+    :host #targets > div{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 8%;
+      height: 7%;
+    }
+
+    /*
+    :host #targets > div:after {
+      position: absolute;
+      bottom: 0;
+      left: 10%;
+      width: 80%;
+      content: "";
+      height: 3px;
+      background: rgba(255,255,255,.3);
+      transition: all 250ms linear;
+
+      display: block;
+    }
+
+    :host #targets > div.selected:after{
+      left: 0;
+      width: 100%;
+      background: rgba(255,255,255,1);
+    }
+    */
+
+    :host #targets.A0 .r{
+      top: 35%;
+    }
+
+    :host #targets.A0 #r2 {
+       left: 34.5%;
+     }
+
+    :host #targets.A0 #r3 {
+      left: 42%;
+    }
+
+    :host #targets.A0 #r4 {
+      left: 51%;
+    }
+
+    :host #targets.A0 #r5 {
+      left: 58%;
+    }
+
+    :host #targets.A0 .b{
+      top: 59%;
+    }
+
+    :host #targets.A0 #b5 {
+      left: 33%;
+    }
+
+    :host #targets.A0 #b4 {
+      left: 42%;
+    }
+
+    :host #targets.A0 #b3 {
+      left: 50%;
+    }
+
+    :host #targets.A0 #b2 {
+      left: 60%;
+    }
+
+
+
+    :host #targets #r1{
+      display: none;
+    }
+
+    :host #targets #b1{
+      display: none;
+    }
+
+
+    :host #targets.A180 .b{
+      top: 35%;
+    }
+
+    :host #targets.A180 #b2 {
+      left: 34.5%;
+    }
+
+    :host #targets.A180 #b3 {
+      left: 45%;
+    }
+
+    :host #targets.A180 #b4 {
+      left: 50%;
+    }
+
+    :host #targets.A180 #b5 {
+      left: 58%;
+    }
+
+    :host #targets.A180 .r{
+      top: 59%;
+    }
+
+    :host #targets.A180 #r5 {
+      left: 33%;
+    }
+
+    :host #targets.A180 #r4 {
+       left: 41.5%;
+     }
+
+    :host #targets.A180 #r3 {
+      left: 51%;
+    }
+
+    :host #targets.A180 #r2 {
+      left: 59.5%;
+    }
+
+    :host .dropzone{
+      @apply(--layout-vertical);
+      @apply(--layout-center);
+      @apply(--layout-end-justified);
+    }
+
+    :host .dropzone paper-icon-button{
+      display: none;
+    }
+
+    :host .dropzone.active paper-icon-button{
+      display: block;
+    }
+
+  </style>
+
+  <template>
+    <content></content>
+    <div id="viewport">
+      <div id="view">
+        <canvas id="canvas"></canvas>
+        <div id="targets" class$="{{side}}">
+          <template is="dom-repeat" items="{{models}}" as="model">
+            <div id$="[[model.id]]" class$="dropzone [[model.color]] {{activeCss(model.selected)}}" hidden$="{{!showModel(model, currentStep)}}">
+              <paper-icon-button class="clearButton" icon="clear" on-tap="onClearTap"></paper-icon-button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <paper-dialog opened="[[!loaded]]">
+      <h2>Installing the Defense Selector</h2>
+      <div>[[loadingState]]</div>
+      <paper-progress indeterminate="[[indeterminateLoadingState]]"></paper-progress>
+    </paper-dialog>
+
+    <image-cacher id="cache" image-map="{{imageMap}}" image-url="{{imageUrl}}" installed="{{installed}}"></image-cacher>
+
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'defense-canvas',
+
+    behaviors: [
+
+    ],
+
+    listeners: {
+      'cache.loaded': 'onInstalled'
+    },
+
+    properties: {
+
+      angle: {
+        type: String,
+        value: "A0"
+      },
+
+      initialized: {
+        type: Boolean,
+        value: false
+      },
+
+      autoScaled: {
+        type: Boolean,
+        value: false
+      },
+
+      side:{
+        type: String,
+        value: "A0"
+      },
+
+      color: {
+        type: String,
+        value: ""
+      },
+
+      installed: {
+        type: Boolean,
+        value: false
+      },
+
+
+      indeterminateLoadingState: {
+        type: Boolean,
+        value: true
+      },
+
+      loadingState: {
+        type: String,
+        value: "initializing..."
+      },
+
+      loaded: {
+        type: Boolean,
+        value: false,
+        observer: 'onLoadedChange'
+      },
+
+      audienceRedCategory: {
+        type: String,
+        value: "a"
+      },
+
+      audienceBlueCategory: {
+        type: String,
+        value: "b"
+      },
+
+        backgroundImage: {
+          type: String,
+          value: null
+        },
+
+        scalar: {
+          type: Number,
+          value: 4
+        },
+
+      precacheUrls: {
+          type: Array,
+          value: function(){
+            return [];
+          },
+        },
+
+
+      imageUrl: {
+        type: "String",
+        value: ""
+      },
+
+      models: {
+        type: Object,
+        value: function(){
+          return null;
+        },
+        notify: true
+      },
+
+      staticModels: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      selectionModels: {
+        type: Object,
+        value: function(){
+          return null;
+        },
+        notify: true
+      },
+
+      imageMap: {
+        type: Object,
+        value: function(){
+          return null;
+        }
+      },
+
+      currentStep: {
+        type: Number,
+        value: 0
+      }
+
+
+
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+
+      if(this.installed){
+        this.set("loading", false);
+      }
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+      this.setupDragging();
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+
+    },
+
+    // Element Behavior
+
+    setupDragging:function(){
+
+      //From the interact docs
+      function dragMoveListener (event) {
+        var target = event.target,
+        // keep the dragged position in the data-x/data-y attributes
+                x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+                y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+        // translate the element
+        target.style.webkitTransform =
+                target.style.transform =
+                        'translate(' + x + 'px, ' + y + 'px)';
+
+        // update the posiion attributes
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      }
+
+
+
+      interact("#view",{
+        //context:this.$$(".someContainer")
+      })
+              .draggable({
+                inertia: true,
+                onmove: dragMoveListener
+              })
+    },
+
+    showModel: function(model, currentStep){
+      if(model.id.indexOf(this.color) > -1 && currentStep == 0){
+        return true;
+      }else if(model.id.indexOf(this.color) == -1 && currentStep == 1){
+        return true;
+      }else{
+        return false;
+      }
+
+    },
+
+    activeCss: function(selected){
+      if(selected){
+        return "active";
+      }else{
+        return "";
+      }
+    },
+
+    onClearTap: function(event){
+      var modelId = event.model.model.id;
+      this.clearModel(modelId);
+      this.paintScene();
+    },
+
+    clearModel: function(modelId){
+      var selectedItem = null;
+      for(var i = 0; i < this.models.length; i++) {
+        var model = this.models[i];
+        if (model.id == modelId) {
+          this.set("models." + i + ".selected", false);
+          for (var x = 0; x < model.options.length; x++) {
+            var option = model.options[x];
+            for (var y = 0; y < option.items.length; y++) {
+              var item = option.items[y];
+              if(item.selected){
+                selectedItem = item;
+              }
+              this.set("models." + i + ".options." + x + ".items." + y + ".selected", false);
+            }
+          }
+        }
+      }
+
+      if(!selectedItem){
+        return;
+      }
+
+      var selectionModel = null;
+      if(modelId.indexOf(this.color) > -1){
+        selectionModel = this.selectionModels[0];
+      }else{
+        selectionModel = this.selectionModels[1];
+      }
+      for (var x = 0; x < selectionModel.options.length; x++) {
+        var option = selectionModel.options[x];
+        var _selected = false;
+        for (var y = 0; y < option.items.length; y++) {
+          var item = option.items[y];
+          if (item.sku == selectedItem.sku) {
+            this.set("selectionModels." + this.currentStep + ".options." + x + ".items." + y + ".selected", false);
+            _selected = true;
+          }
+        }
+        if(_selected){
+          for (var y = 0; y < option.items.length; y++) {
+            var item = option.items[y];
+            if (item.sku != selectedItem.sku) {
+              this.set("selectionModels." + this.currentStep + ".options." + x + ".items." + y + ".disabled", false);
+            }
+          }
+        }
+
+      }
+
+      //Polymer.dom(card).node.set("hidden",true);
+
+    },
+
+    initPrecache: function(){
+      this.$.cache.initPrecache();
+    },
+
+
+    onSideChange: function(event){
+      this.paintScene();
+    },
+
+    onInstalled: function(event){
+      console.log("sw installed");
+      this.set("loaded", true);
+    },
+
+    onUpdated: function(event){
+      console.log("sw updated");
+      this.set("loaded", true);
+    },
+
+    onError: function(event){
+      console.error("A service worker error occurred");
+    },
+
+    onLoadedChange: function(loaded){
+      if(loaded === true){
+        this.paintScene();
+      }
+    },
+
+    onSelectModel: function(event){
+      var model = event.model.model;
+      //model.set("item.selected", true);
+
+      for(var i = 0; i < this.models.length; i++){
+        var _model = this.models[i];
+        if(_model.id == model.id){
+          this.set("models." + i + ".selected", true);
+        }else{
+          this.set("models." + i + ".selected", false);
+        }
+      }
+
+      this.fire("model-selected", model);
+    },
+
+    /**
+    onDrag: function(event){
+      if(event.detail.state == "start"){
+        this.startDrag(event);
+      }else if(event.detail.state == "end"){
+        this.endDrag();
+      }else if(event.detail.state == "track"){
+        this.debounce("drag", this.drag(event),250);
+      }
+    },
+
+    startDrag: function(event){
+      //this.sceneWidth = $(".scene").outerWidth();
+      //this.vignetteWidth = $(".scene .image").outerWidth();
+
+      this.dragging = true;
+
+      this.startX = event.detail.x;//0;
+      this.startY = event.detail.y;//0;
+
+      this.startLeft = this.$.view.style.marginLeft.replace("px", "");
+      this.startTop = this.$.view.style.marginTop.replace("px", "");
+
+      //this.startLeft = $(".scene > .image").css("margin-left").replace("px", "");
+      //this.startTop = $(".scene > .image").css("margin-top").replace("px", "");
+      //this.dragging = true;
+    },
+
+
+    drag: function(event){
+      if(!this.dragging){
+        this.startDrag(event);
+      }
+
+      var newX = event.detail.x;//0;
+      var newY = event.detail.y;//0;
+
+      var deltaX = this.startX - newX;
+      var deltaY = this.startY - newY;
+
+      var newLeft = Math.ceil(this.startLeft - deltaX);
+      var newTop = Math.ceil(this.startTop - deltaY);
+
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        var minX = 0;
+
+        if(-1 * newLeft > maxX){
+          newLeft = -1*maxX;
+        }else if(-1 * newLeft < minX){
+          newLeft = -1 * minX;
+        }
+
+        this.$.view.style.marginLeft = newLeft + "px";
+      }
+
+
+
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+        var minY = 0;
+
+        if(-1 * newTop > maxY){
+          newTop = -1*maxY;
+        }else if(-1 * newTop < minY){
+          newTop = -1 * minY;
+        }
+
+        this.$.view.style.marginTop = newTop + "px";
+      }
+
+      //$(".scene > .image").css("margin-left",newLeft + "px");
+      //$(".scene > .image").css("margin-top",newTop + "px");
+
+    },
+
+    endDrag: function(){
+      // if(!this.dragging) return;
+      this.dragging = false;
+    },
+  **/
+
+    allianceFilter: function(color){
+      if (!color) {
+        //do not allow selecting until an alliance has been selected
+        return true;
+      } else {
+        // return a filter function for the current search string
+        return function(model) {
+          if(model.color == color){
+            return true;
+          }
+          return false;
+        };
+      }
+    },
+
+    autoScale: function(){
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var targetWidth = 1.146 * sceneWidth;
+      this.set("scalar", 2048 / targetWidth);
+
+      this.autoScaled = true;
+
+      this.paintScene();
+    },
+
+    scrollToTop: function(){
+
+      this.toggleClass("scroll", true, this.$.view);
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      var x = 0;
+      var y = 0;
+
+      //center
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        //this.$.view.style.marginLeft = -1 * (maxX / 2) + "px";
+        x= -1 * (maxX / 2);
+      }
+
+      //move to top
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+
+        //this.$.view.style.marginTop = (-1 * maxY + 16) + "px";
+        y = -1 * (maxY / 8);
+
+      }
+
+      this.$.view.style.webkitTransform =
+              this.$.view.style.transform =
+                      'translate(' + x + 'px, ' + y + 'px)';
+
+      // update the position attributes
+      this.$.view.setAttribute('data-x', x);
+      this.$.view.setAttribute('data-y', y);
+
+
+      setTimeout(function(){
+        this.toggleClass("scroll", false, this.$.view);
+      }.bind(this), 500)
+    },
+
+    scrollToBottom: function(){
+
+      this.toggleClass("scroll", true, this.$.view);
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      var x = 0;
+      var y = 0;
+
+      //center
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        //this.$.view.style.marginLeft = -1 * (maxX / 2) + "px";
+        x= -1 * (maxX / 2);
+      }
+
+      //move to bottom
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+
+        //this.$.view.style.marginTop = (-1 * maxY + 16) + "px";
+        y = -3 * (maxY / 4);
+
+      }
+
+
+      this.$.view.style.webkitTransform =
+              this.$.view.style.transform =
+                      'translate(' + x + 'px, ' + y + 'px)';
+
+      // update the position attributes
+      this.$.view.setAttribute('data-x', x);
+      this.$.view.setAttribute('data-y', y);
+
+
+      setTimeout(function(){
+        this.toggleClass("scroll", false, this.$.view);
+      }.bind(this), 500)
+    },
+
+    goToCenter: function(){
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      var x = 0;
+      var y = 0;
+
+      //center
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        //this.$.view.style.marginLeft = -1 * (maxX / 2) + "px";
+        x= -1 * (maxX / 2);
+      }
+
+      //move to bottom
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+
+        //this.$.view.style.marginTop = (-1 * maxY + 16) + "px";
+        y = (-1 * (maxY / 2));
+
+      }
+
+
+      this.$.view.style.webkitTransform =
+              this.$.view.style.transform =
+                      'translate(' + x + 'px, ' + y + 'px)';
+
+      // update the position attributes
+      this.$.view.setAttribute('data-x', x);
+      this.$.view.setAttribute('data-y', y);
+    },
+
+    scrollToCenter: function(){
+
+      this.toggleClass("scroll", true, this.$.view);
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      var x = 0;
+      var y = 0;
+
+      //center
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        //this.$.view.style.marginLeft = -1 * (maxX / 2) + "px";
+        x= -1 * (maxX / 2);
+      }
+
+      //move to bottom
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+
+        //this.$.view.style.marginTop = (-1 * maxY + 16) + "px";
+        y = (-1 * (maxY / 2));
+
+      }
+
+
+      this.$.view.style.webkitTransform =
+              this.$.view.style.transform =
+                      'translate(' + x + 'px, ' + y + 'px)';
+
+      // update the position attributes
+      this.$.view.setAttribute('data-x', x);
+      this.$.view.setAttribute('data-y', y);
+
+
+      setTimeout(function(){
+        this.toggleClass("scroll", false, this.$.view);
+      }.bind(this), 500)
+    },
+
+    initialize: function(){
+
+      var vignetteWidth = this.$.view.offsetWidth;
+      var sceneWidth = this.$.viewport.offsetWidth;
+      var vignetteHeight = this.$.view.offsetHeight;
+      var sceneHeight = this.$.viewport.offsetHeight;
+
+      var x = 0;
+      var y = 0;
+
+      //move to bottom
+      if(sceneHeight < vignetteHeight){
+        var maxY = vignetteHeight - sceneHeight;
+
+        //this.$.view.style.marginTop = (-1 * maxY + 16) + "px";
+        y = -3 * (maxY / 4);
+
+      }
+
+      //center
+      if(sceneWidth < vignetteWidth){
+        var maxX = vignetteWidth - sceneWidth;
+        //this.$.view.style.marginLeft = -1 * (maxX / 2) + "px";
+        x= -1 * (maxX / 2);
+      }
+
+      // translate the element
+      this.$.view.style.webkitTransform =
+              this.$.view.style.transform =
+                      'translate(' + x + 'px, ' + y + 'px)';
+
+      this.initialized = true;
+      this.fire("initialized");
+      this.paintScene();
+    },
+
+    paintScene: function(){
+      if(!this.imageUrl || !this.side){
+        return;
+      }
+
+      var context = this.$.canvas.getContext("2d");
+
+      this.set("loadingState", "loading field...");
+
+      var _bg = new Image();
+      _bg.src = this.imageUrl + this.side + ".png";
+      _bg.onload = function() {
+
+        context.canvas.height = _bg.height / this.scalar;
+        context.canvas.width = _bg.width / this.scalar;
+        /**
+
+        this.$.targets.style.height = (_bg.height / this.scalar) + "px";
+        this.$.targets.style.width = (_bg.width / this.scalar) + "px";
+         **/
+
+        this.$.view.style.height = (_bg.height / this.scalar) + "px";
+        this.$.view.style.width = (_bg.width / this.scalar) + "px";
+
+        if(!this.autoScaled){
+          this.autoScale();
+          return;
+        }
+
+        if(!this.initialized){
+          this.initialize();
+          return;
+        }
+
+        context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+        context.drawImage(_bg, 0, 0, _bg.width, _bg.height, 0, 0, _bg.width / this.scalar, _bg.height / this.scalar);
+
+        this.set("loadingState", "loading bases...");
+
+        var count = this.staticModels.length;
+        this.staticModels.forEach(function (model) {
+
+
+          var fileName = "" +this.side+"_" + model.id+ "_base";
+          var image = this.get("imageMap." + fileName);
+
+          var _disabled = false;
+
+          if(!this.currentStep && model.id.indexOf(this.color) == -1){
+            _disabled = true;
+          }else if(this.currentStep && model.id.indexOf(this.color) > -1){
+
+          }else{
+            if(model.id.indexOf("_3") > -1 ){
+              _disabled = true;
+            }else if(model.id.indexOf("_1") > -1 ){
+              _disabled = true;
+            }
+          }
+
+
+          var _img = new Image();
+
+          _img.src = this.imageUrl + fileName + ".png";
+          _img.onload = function () {
+            count--;
+            if(_disabled) context.globalAlpha = .1;
+            context.drawImage(_img, 0, 0, _img.width, _img.height, image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
+            if(_disabled) context.globalAlpha = 1;
+            if(count == 0){
+              this.loadDynamicImages();
+            }
+          }.bind(this);
+        }.bind(this));
+
+      }.bind(this);
+    },
+
+    loadDynamicImages: function(){
+      var context = this.$.canvas.getContext("2d");
+
+      this.set("loadingState", "loading defenses...");
+
+      this.models.sort(function(a,b){
+        if(a.color != b.color){
+          if(a.color == "r"){
+            return 1;
+          }else{
+            return -1;
+          }
+        }else{
+          var angle = parseInt(this.side.replace("A",""));
+          if(angle < 180){
+            if(a.color == "b"){
+              if(parseInt(a.sku.replace("p","")) > parseInt(b.sku.replace("p",""))){
+                return -1;
+              }else{
+                return 1;
+              }
+            }else{
+              if(parseInt(a.sku.replace("p","")) > parseInt(b.sku.replace("p",""))){
+                return 1;
+              }else{
+                return -1;
+              }
+            }
+          }else{
+            if(a.color == "r"){
+              if(parseInt(a.sku.replace("p","")) > parseInt(b.sku.replace("p",""))){
+                return -1;
+              }else{
+                return 1;
+              }
+            }else{
+              if(parseInt(a.sku.replace("p","")) > parseInt(b.sku.replace("p",""))){
+                return 1;
+              }else{
+                return -1;
+              }
+            }
+          }
+
+        }
+      }.bind(this)).forEach(function(model){
+        model.options.forEach(function(option){
+          option.items.forEach(function(item){
+            if(item.selected){
+
+              var fileName = ""+this.side+"_" + model.color + "_" + model.sku + "_"+item.sku;
+
+              var _disabled = false;
+
+
+              if(!this.currentStep && model.color != this.color){
+                _disabled = true;
+              }else if(!this.currentStep && model.color == this.color){
+                if(model.sku == "p3"){
+                  _disabled = true;
+                }else if(model.sku == "p1"){
+                  _disabled = true;
+                }
+              }else if(this.currentStep == 1 && model.color != this.color){
+                if(model.sku == "p3"){
+                  _disabled = true;
+                }else if(model.sku == "p1"){
+                  _disabled = true;
+                }
+              }
+
+              var image = this.get("imageMap." + fileName);
+
+              var _img = new Image();
+                _img.src = this.imageUrl + fileName + ".png";
+                _img.onload = function(){
+                  if(_disabled) context.globalAlpha = .2;
+                  context.drawImage(_img, 0, 0, _img.width , _img.height , image.x / this.scalar, image.y / this.scalar, _img.width / this.scalar, _img.height / this.scalar);
+                  if(_disabled) context.globalAlpha = 1;
+                }.bind(this);
+              }
+          },this);
+        },this);
+      },this);
+
+      this.setupDropZone();
+    },
+
+    setupDropZone:function(){
+      //Get all dropzones
+      var dropZones = Polymer.dom(this.root).querySelectorAll('.dropzone');
+      var self = this;
+      dropZones.forEach(function(dropzone){
+        interact(dropzone).dropzone({
+
+          accept:'.thumbnail',
+          overlap:'pointer',
+          ondragenter:function(ev){
+            self.toggleClass('hover', true, ev.target);
+            //console.log('drag enter');
+
+          },
+          ondragleave:function(ev){
+            self.toggleClass('hover', false, ev.target);
+
+          },
+          ondrop:function(ev){
+
+
+            var card = ev.relatedTarget;
+
+
+            if(Polymer.dom(card).node.classList.contains("disabled")){
+              return;
+            }
+
+            var dropzone = ev.target;
+            var modelId = Polymer.dom(dropzone).node.id;
+
+            this.clearModel(modelId);
+
+            var itemSku = Polymer.dom(card).node.sku;
+
+
+            for(var i = 0; i < this.models.length; i++) {
+              var model = this.models[i];
+              if (model.id == modelId) {
+                this.set("models." + i + ".selected", true);
+                for (var x = 0; x < model.options.length; x++) {
+                  var option = model.options[x];
+                  for (var y = 0; y < option.items.length; y++) {
+                    var item = option.items[y];
+                    if (item.sku == itemSku) {
+                      this.set("models." + i + ".options." + x + ".items." + y + ".selected", true);
+                      _selected = true;
+                    } else {
+                      this.set("models." + i + ".options." + x + ".items." + y + ".selected", false);
+                    }
+                  }
+                }
+              }
+            }
+
+            {
+              var model = this.selectionModels[this.currentStep];
+              for (var x = 0; x < model.options.length; x++) {
+                var option = model.options[x];
+                var _selected = false;
+                for (var y = 0; y < option.items.length; y++) {
+                  var item = option.items[y];
+                  if (item.sku == itemSku) {
+                    _selected = true;
+                    this.set("selectionModels." + this.currentStep + ".options." + x + ".items." + y + ".selected", true);
+                  }
+                }
+                if(_selected){
+                  for (var y = 0; y < option.items.length; y++) {
+                    var item = option.items[y];
+                    if (item.sku != itemSku) {
+                      this.set("selectionModels." + this.currentStep + ".options." + x + ".items." + y + ".disabled", true);
+                    }
+                  }
+                }
+
+              }
+            }
+
+            //Polymer.dom(card).node.set("hidden",true);
+            this.paintScene();
+          }.bind(this)
+
+        }, this);
+      }, this);
+
+    }
+
+  });
+
+</script>
