@@ -182,7 +182,7 @@ Example:
     }
 
     :host #targets.A180 .r{
-      top: 60%;
+      top: 59%;
     }
 
     :host #targets.A180 #r5 {
@@ -190,7 +190,7 @@ Example:
     }
 
     :host #targets.A180 #r4 {
-       left: 42%;
+       left: 41.5%;
      }
 
     :host #targets.A180 #r3 {
@@ -198,7 +198,21 @@ Example:
     }
 
     :host #targets.A180 #r2 {
-      left: 60%;
+      left: 59.5%;
+    }
+
+    :host .dropzone{
+      @apply(--layout-vertical);
+      @apply(--layout-center);
+      @apply(--layout-end-justified);
+    }
+
+    :host .dropzone paper-icon-button{
+      display: none;
+    }
+
+    :host .dropzone.active paper-icon-button{
+      display: block;
     }
 
   </style>
@@ -210,7 +224,9 @@ Example:
         <canvas id="canvas"></canvas>
         <div id="targets" class$="{{side}}">
           <template is="dom-repeat" items="{{models}}" as="model">
-            <div id$="[[model.id]]" class$="dropzone [[model.color]]"></div>
+            <div id$="[[model.id]]" class$="dropzone [[model.color]] {{activeCss(model.selected)}}" hidden$="{{!showModel(model, currentStep)}}">
+              <paper-icon-button class="clearButton" icon="clear" on-tap="onClearTap"></paper-icon-button>
+            </div>
           </template>
         </div>
       </div>
@@ -427,6 +443,86 @@ Example:
                 inertia: true,
                 onmove: dragMoveListener
               })
+    },
+
+    showModel: function(model, currentStep){
+      if(model.id.indexOf(this.color) > -1 && currentStep == 0){
+        return true;
+      }else if(model.id.indexOf(this.color) == -1 && currentStep == 1){
+        return true;
+      }else{
+        return false;
+      }
+
+    },
+
+    activeCss: function(selected){
+      if(selected){
+        return "active";
+      }else{
+        return "";
+      }
+    },
+
+    onClearTap: function(event){
+      var modelId = event.model.model.id;
+      this.clearModel(modelId);
+      this.paintScene();
+    },
+
+    clearModel: function(modelId){
+      var selectedItem = null;
+      for(var i = 0; i < this.models.length; i++) {
+        var model = this.models[i];
+        if (model.id == modelId) {
+          this.set("models." + i + ".selected", false);
+          for (var x = 0; x < model.options.length; x++) {
+            var option = model.options[x];
+            for (var y = 0; y < option.items.length; y++) {
+              var item = option.items[y];
+              if(item.selected){
+                selectedItem = item;
+              }
+              this.set("models." + i + ".options." + x + ".items." + y + ".selected", false);
+            }
+          }
+        }
+      }
+
+      if(!selectedItem){
+        return;
+      }
+
+      var selectionModel = null;
+      var color = this.color;
+      if(modelId.indexOf(this.color) > -1){
+        selectionModel = this.selectionModels[0];
+      }else{
+        selectionModel = this.selectionModels[1];
+      }
+      for (var x = 0; x < selectionModel.options.length; x++) {
+        var option = selectionModel.options[x];
+        var _selected = false;
+        for (var y = 0; y < option.items.length; y++) {
+          var item = option.items[y];
+          if (item.sku == selectedItem.sku) {
+            this.set("selectionModels." + this.currentStep + ".options." + x + ".items." + y + ".selected", false);
+            _selected = true;
+          }
+        }
+        if(_selected){
+          for (var y = 0; y < option.items.length; y++) {
+            var item = option.items[y];
+            if (item.sku != selectedItem.sku) {
+              this.set("selectionModels." + this.currentStep + ".options." + x + ".items." + y + ".disabled", false);
+            }
+          }
+        }
+
+      }
+
+      //Polymer.dom(card).node.set("hidden",true);
+
     },
 
     initPrecache: function(){
@@ -949,15 +1045,17 @@ Example:
           accept:'.thumbnail',
           overlap:'pointer',
           ondragenter:function(ev){
-            self.toggleClass('active', true, ev.target);
+            self.toggleClass('hover', true, ev.target);
             //console.log('drag enter');
 
           },
           ondragleave:function(ev){
-            self.toggleClass('active', false, ev.target);
+            self.toggleClass('hover', false, ev.target);
 
           },
           ondrop:function(ev){
+
+
             var card = ev.relatedTarget;
 
 
@@ -967,12 +1065,16 @@ Example:
 
             var dropzone = ev.target;
             var modelId = Polymer.dom(dropzone).node.id;
+
+            this.clearModel(modelId);
+
             var itemSku = Polymer.dom(card).node.sku;
 
 
             for(var i = 0; i < this.models.length; i++) {
               var model = this.models[i];
               if (model.id == modelId) {
+                this.set("models." + i + ".selected", true);
                 for (var x = 0; x < model.options.length; x++) {
                   var option = model.options[x];
                   for (var y = 0; y < option.items.length; y++) {

@@ -1014,7 +1014,7 @@ Example:
     },
 
     showZoom: function(currentStep){
-      return this.currentStep > 2;
+      return this.currentStep >= 2;
     },
 
     showSelector: function(currentStep){
@@ -1070,18 +1070,6 @@ Example:
           for(var x = 0; x < model.options.length; x++){
             var option = model.options[x];
             if(option.sku == this.audienceGroup){
-              this.set("selectionModels." + step + ".options." + x + ".hidden", true);
-            }else{
-              this.set("selectionModels." + step + ".options." + x + ".hidden", false);
-            }
-          }
-        }else if(step == 2){
-          //only show audience group
-
-          var model = this.selectionModels[step];
-          for(var x = 0; x < model.options.length; x++){
-            var option = model.options[x];
-            if(option.sku != this.audienceGroup){
               this.set("selectionModels." + step + ".options." + x + ".hidden", true);
             }else{
               this.set("selectionModels." + step + ".options." + x + ".hidden", false);
