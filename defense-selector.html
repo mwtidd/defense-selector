@@ -186,6 +186,13 @@ Example:
 
     }
 
+    :host #edit{
+      position: absolute;
+      right: 8px;
+      top: 148px;
+
+    }
+
     :host #prevAngle{
       position: absolute;
       left: 8px;
@@ -693,6 +700,7 @@ Example:
           <paper-icon-button id="prevAngle" icon="image:rotate-right" on-tap="onPreviousAngle" hidden$="{{!showControls(currentStep)}}"></paper-icon-button>
           <paper-icon-button id="zoomIn" icon="add" on-tap="zoomIn" hidden$="{{!showZoom(currentStep)}}"></paper-icon-button>
           <paper-icon-button id="zoomOut" icon="remove" on-tap="zoomOut" hidden$="{{!showZoom(currentStep)}}"></paper-icon-button>
+          <paper-icon-button id="edit" icon="create" on-tap="edit" hidden$="{{!showEdit(currentStep)}}"></paper-icon-button>
           <paper-icon-button id="menuButton" icon="menu" paper-drawer-toggle hidden></paper-icon-button>
 
 
@@ -1017,6 +1025,15 @@ Example:
       return this.currentStep >= 2;
     },
 
+    showEdit: function(currentStep){
+      return this.currentStep >= 2;
+    },
+
+    edit: function(){
+      this.set("introStep", 2);
+      this.$.introModal.open();
+    },
+
     showSelector: function(currentStep){
       if(this.currentStep == null){
         return false;
@@ -1085,6 +1102,7 @@ Example:
         if(step == 0){
           this.$.canvas.scrollToBottom();
         }else if(step == 1){
+          this.$.canvas.paintScene();
           this.$.canvas.scrollToTop();
         }else{
           this.$.canvas.scrollToCenter();

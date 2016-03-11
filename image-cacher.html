@@ -36,10 +36,11 @@ Example:
   <template>
     <content></content>
     <platinum-sw-register id="imageService">
-      <platinum-sw-cache precache="{{precacheUrls0}}" cache-config-file$="cache-config-A0.json"></platinum-sw-cache>
-      <platinum-sw-cache precache="{{precacheUrls180}}" cache-config-file$="cache-config-A180.json"></platinum-sw-cache>
+      <platinum-sw-cache precache="{{precacheUrls0}}" cache-id="defense-selector-a0" default-cache-strategy="cacheFirst"></platinum-sw-cache>
+      <platinum-sw-cache precache="{{precacheUrls180}}" cache-id="defense-selector-a180" default-cache-strategy="cacheFirst"></platinum-sw-cache>
     </platinum-sw-register>
 
+    <!--
     <platinum-sw-register id="imageService2">
       <platinum-sw-cache precache="{{precacheUrls45}}" cache-config-file$="cache-config-A45.json"></platinum-sw-cache>
       <platinum-sw-cache precache="{{precacheUrls90}}" cache-config-file$="cache-config-A90.json"></platinum-sw-cache>
@@ -49,7 +50,7 @@ Example:
       <platinum-sw-cache precache="{{precacheUrls270}}" cache-config-file$="cache-config-A270.json"></platinum-sw-cache>
       <platinum-sw-cache precache="{{precacheUrls315}}" cache-config-file$="cache-config-A315.json"></platinum-sw-cache>
     </platinum-sw-register>
-
+    -->
   </template>
 
 </dom-module>

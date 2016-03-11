@@ -494,7 +494,6 @@ Example:
       }
 
       var selectionModel = null;
-      var color = this.color;
       if(modelId.indexOf(this.color) > -1){
         selectionModel = this.selectionModels[0];
       }else{
@@ -932,13 +931,18 @@ Example:
 
           var _disabled = false;
 
-          if(this.currentStep < 2 && model.id.indexOf("_3") > -1 ){
+          if(!this.currentStep && model.id.indexOf(this.color) == -1){
             _disabled = true;
-          }else if(this.currentStep < 2 && model.id.indexOf("_1") > -1 ){
-            _disabled = true;
-          }else if(!this.currentStep && model.id.indexOf(this.color) == -1){
-            _disabled = true;
+          }else if(this.currentStep && model.id.indexOf(this.color) > -1){
+
+          }else{
+            if(model.id.indexOf("_3") > -1 ){
+              _disabled = true;
+            }else if(model.id.indexOf("_1") > -1 ){
+              _disabled = true;
+            }
           }
+
 
           var _img = new Image();
 
@@ -1010,12 +1014,22 @@ Example:
               var fileName = ""+this.side+"_" + model.color + "_" + model.sku + "_"+item.sku;
 
               var _disabled = false;
-              if(this.currentStep < 2 && model.sku == "p3"){
+
+
+              if(!this.currentStep && model.color != this.color){
                 _disabled = true;
-              }else if(this.currentStep < 2 && model.sku == "p1"){
-                _disabled = true;
-              }else if(!this.currentStep && model.color != this.color){
-                _disabled = true;
+              }else if(!this.currentStep && model.color == this.color){
+                if(model.sku == "p3"){
+                  _disabled = true;
+                }else if(model.sku == "p1"){
+                  _disabled = true;
+                }
+              }else if(this.currentStep == 1 && model.color != this.color){
+                if(model.sku == "p3"){
+                  _disabled = true;
+                }else if(model.sku == "p1"){
+                  _disabled = true;
+                }
               }
 
               var image = this.get("imageMap." + fileName);
